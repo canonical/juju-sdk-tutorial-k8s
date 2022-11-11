@@ -1,0 +1,11 @@
+# This file defines charm config options, and populates the Configure tab on Charmhub.
+# If your charm does not require configuration options, delete this file entirely.
+#
+# See https://juju.is/docs/config for guidance.
+
+options:
+  server-port:
+    default: 8000
+    description: Default port on which FastAPI is available
+    type: int
+

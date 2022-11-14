@@ -5,6 +5,7 @@
 # Learn more at: https://juju.is/docs/sdk
 import logging
 
+import requests
 from ops.charm import CharmBase
 from ops.main import main
 from ops.model import ActiveStatus
@@ -62,6 +63,8 @@ class FastAPIDemoCharm(CharmBase):
                 self.container.restart(self.pebble_service_name)
                 logger.info(f"Restarted '{self.pebble_service_name}' service")
 
+            # add workload version in juju status
+            self.unit.set_workload_version(self.version)
             self.unit.status = ActiveStatus()
         else:
             self.unit.status = WaitingStatus("Waiting for Pebble in workload container")
@@ -90,6 +93,24 @@ class FastAPIDemoCharm(CharmBase):
             },
         }
         return Layer(pebble_layer)
+
+    @property
+    def version(self) -> str:
+        """Reports the current workload (FastAPI app) version."""
+        if self.container.can_connect() and self.container.get_services(self.pebble_service_name):
+            try:
+                return self._request_version()
+            # Catching Exception is not ideal, but we don't care much for the error here, and just
+            # default to setting a blank version since there isn't much the admin can do!
+            except Exception as e:
+                logger.warning("unable to get version from API: %s", str(e))
+                logger.exception(e)
+        return ""
+
+    def _request_version(self) -> str:
+        """Helper for fetching the version from the running workload using the API."""
+        resp = requests.get(f"http://localhost:{self.config['server-port']}/version", timeout=10)
+        return resp.json()["version"]
 
 
 if __name__ == "__main__":  # pragma: nocover

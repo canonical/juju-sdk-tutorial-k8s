@@ -16,6 +16,11 @@ assumes:
   - juju >= 3.0
   - k8s-api
 
+requires:
+  database:
+    interface: postgresql_client
+    limit: 1
+
 # The containers and resources metadata apply to Kubernetes charms only.
 # Remove them if not required.
 

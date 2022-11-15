@@ -6,6 +6,8 @@
 import logging
 
 import requests
+from charms.data_platform_libs.v0.data_interfaces import DatabaseCreatedEvent
+from charms.data_platform_libs.v0.data_interfaces import DatabaseRequires
 from ops.charm import CharmBase
 from ops.main import main
 from ops.model import ActiveStatus
@@ -25,6 +27,13 @@ class FastAPIDemoCharm(CharmBase):
         super().__init__(*args)
         self.pebble_service_name = "fastapi-service"
         self.container = self.unit.get_container("demo-server")  # see 'containers' in metadata.yaml
+
+        # Charm events defined in the database requires charm library.
+        self.database = DatabaseRequires(self, relation_name="database", database_name="names_db")
+        self.framework.observe(self.database.on.database_created, self._on_database_created)
+        self.framework.observe(self.database.on.endpoints_changed, self._on_database_created)
+        self.framework.observe(self.on.database_relation_broken, self._on_database_relation_removed)
+
         self.framework.observe(self.on.demo_server_pebble_ready, self._update_layer_and_restart)
         self.framework.observe(self.on.config_changed, self._on_config_changed)
 
@@ -37,6 +46,15 @@ class FastAPIDemoCharm(CharmBase):
             return
 
         self._update_layer_and_restart(None)
+
+    def _on_database_created(self, event: DatabaseCreatedEvent) -> None:
+        """Event is fired when postgres database is created."""
+        self._update_layer_and_restart(None)
+
+    def _on_database_relation_removed(self, event) -> None:
+        """Event is fired when relation with postgres is broken."""
+        self.unit.status = WaitingStatus("Waiting for database relation")
+        raise SystemExit(0)
 
     def _update_layer_and_restart(self, event) -> None:
         """Define and start a workload using the Pebble API.
@@ -70,6 +88,49 @@ class FastAPIDemoCharm(CharmBase):
             self.unit.status = WaitingStatus("Waiting for Pebble in workload container")
 
     @property
+    def app_environment(self):
+        """This property method creates a dictionary containing environment variables
+        for the application. It retrieves the database authentication data by calling
+        the `fetch_postgres_relation_data` method and uses it to populate the dictionary.
+        If any of the values are not present, it will be set to None.
+        The method returns this dictionary as output.
+        """
+        db_data = self.fetch_postgres_relation_data()
+        env = {
+            "DEMO_SERVER_DB_HOST": db_data.get("db_host", None),
+            "DEMO_SERVER_DB_PORT": db_data.get("db_port", None),
+            "DEMO_SERVER_DB_USER": db_data.get("db_username", None),
+            "DEMO_SERVER_DB_PASSWORD": db_data.get("db_password", None),
+        }
+        return env
+
+    def fetch_postgres_relation_data(self) -> dict:
+        """Fetch postgres relation data.
+
+        This function retrieves relation data from a postgres database using
+        the `fetch_relation_data` method of the `database` object. The retrieved data is
+        then logged for debugging purposes, and any non-empty data is processed to extract
+        endpoint information, username, and password. This processed data is then returned as
+        a dictionary. If no data is retrieved, the unit is set to waiting status and
+        the program exits with a zero status code."""
+        data = self.database.fetch_relation_data()
+        logger.debug("Got following database data: %s", data)
+        for key, val in data.items():
+            if not val:
+                continue
+            logger.info("New PSQL database endpoint is %s", val["endpoints"])
+            host, port = val["endpoints"].split(":")
+            db_data = {
+                "db_host": host,
+                "db_port": port,
+                "db_username": val["username"],
+                "db_password": val["password"],
+            }
+            return db_data
+        self.unit.status = WaitingStatus("Waiting for database relation")
+        raise SystemExit(0)
+
+    @property
     def _pebble_layer(self):
         """Return a dictionary representing a Pebble layer."""
         command = " ".join(
@@ -89,6 +150,7 @@ class FastAPIDemoCharm(CharmBase):
                     "summary": "fastapi demo",
                     "command": command,
                     "startup": "enabled",
+                    "environment": self.app_environment,
                 }
             },
         }

@@ -43,6 +43,9 @@ class FastAPIDemoCharm(CharmBase):
 
         self.framework.observe(self.on.start, self._count)
 
+        # events on custom actions that are run via 'juju run-action'
+        self.framework.observe(self.on.get_db_info_action, self._on_get_db_info_action)
+
     def _on_config_changed(self, event):
         port = self.config["server-port"]  # see config.yaml
         logger.debug("New application port is requested: %s", port)
@@ -71,6 +74,36 @@ class FastAPIDemoCharm(CharmBase):
         """Event is fired when relation with postgres is broken."""
         self.unit.status = WaitingStatus("Waiting for database relation")
         raise SystemExit(0)
+
+    def _on_get_db_info_action(self, event) -> None:
+        """This method is called when "get_db_info" action is called. It shows information about
+        database access points by calling the `fetch_postgres_relation_data` method and creates
+        an output dictionary containing the host, port, if show_password is True, then include
+        username, and password of the database.
+        If PSQL charm is not integrated, the output is set to "No database connected".
+
+        Learn more about actions at https://juju.is/docs/sdk/actions
+        """
+        show_password = event.params["show-password"]  # see actions.yaml
+        try:
+            db_data = self.fetch_postgres_relation_data()
+            output = {
+                "db-host": db_data.get("db_host", None),
+                "db-port": db_data.get("db_port", None),
+            }
+
+            if show_password:
+                output.update(
+                    {
+                        "db-username": db_data.get("db_username", None),
+                        "db-password": db_data.get("db_password", None),
+                    }
+                )
+        except SystemExit:
+            output = {"result": "No database connected"}
+            raise
+        finally:
+            event.set_results(output)
 
     def _update_layer_and_restart(self, event) -> None:
         """Define and start a workload using the Pebble API.

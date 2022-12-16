@@ -24,6 +24,16 @@ requires:
   database:
     interface: postgresql_client
     limit: 1
+  log-proxy:
+    interface: loki_push_api
+    limit: 1
+
+provides:
+  metrics-endpoint:
+    interface: prometheus_scrape
+  grafana-dashboard:
+    interface: grafana_dashboard
+
 
 # The containers and resources metadata apply to Kubernetes charms only.
 # Remove them if not required.

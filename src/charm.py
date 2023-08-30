@@ -129,12 +129,12 @@ class FastAPIDemoCharm(CharmBase):
         endpoint information, username, and password. This processed data is then returned as
         a dictionary. If no data is retrieved, the unit is set to waiting status and
         the program exits with a zero status code."""
-        data = self.database.fetch_relation_data()
-        logger.debug("Got following database data: %s", data)
-        for key, val in data.items():
-            if not val:
+        relations = self.database.fetch_relation_data()
+        logger.debug("Got following database data: %s", relations)
+        for data in relations.values():
+            if not data:
                 continue
-            logger.info("New PSQL database endpoint is %s", val["endpoints"])
+            logger.info("New PSQL database endpoint is %s", data["endpoints"])
             host, port = val["endpoints"].split(":")
             db_data = {
                 "db_host": host,

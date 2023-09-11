@@ -135,12 +135,12 @@ class FastAPIDemoCharm(CharmBase):
             if not data:
                 continue
             logger.info("New PSQL database endpoint is %s", data["endpoints"])
-            host, port = val["endpoints"].split(":")
+            host, port = data["endpoints"].split(":")
             db_data = {
                 "db_host": host,
                 "db_port": port,
-                "db_username": val["username"],
-                "db_password": val["password"],
+                "db_username": data["username"],
+                "db_password": data["password"],
             }
             return db_data
         self.unit.status = WaitingStatus("Waiting for database relation")

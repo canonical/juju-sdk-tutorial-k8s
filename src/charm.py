@@ -6,7 +6,6 @@
 import json
 import logging
 from typing import Any
-from typing import Optional
 
 import ops
 import requests
@@ -20,6 +19,10 @@ from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
 logger = logging.getLogger(__name__)
 
 PEER_NAME = "fastapi-peer"
+
+
+class DatabaseNotReady(Exception):
+    """Raised when the database is not yet available."""
 
 
 class FastAPIDemoCharm(ops.CharmBase):
@@ -98,8 +101,9 @@ class FastAPIDemoCharm(ops.CharmBase):
         Learn more about actions at https://juju.is/docs/sdk/actions
         """
         show_password = event.params["show-password"]  # see actions.yaml
-        db_data = self.fetch_postgres_relation_data()
-        if db_data is None:
+        try:
+            db_data = self.fetch_postgres_relation_data()
+        except DatabaseNotReady:
             output = {"result": "No database connected"}
         else:
             output = {
@@ -130,7 +134,11 @@ class FastAPIDemoCharm(ops.CharmBase):
         # https://juju.is/docs/sdk/constructs#heading--statuses
         self.unit.status = ops.MaintenanceStatus("Assembling pod spec")
         if self.container.can_connect():
-            new_layer = self._pebble_layer.to_dict()
+            try:
+                new_layer = self._pebble_layer.to_dict()
+            except DatabaseNotReady:
+                self.unit.status = ops.WaitingStatus("Waiting for database relation")
+                return
             # Get the current pebble layer config
             services = self.container.get_plan().to_dict().get("services", {})
             if services != new_layer["services"]:
@@ -155,7 +163,7 @@ class FastAPIDemoCharm(ops.CharmBase):
         If any of the values are not present, it will be set to None.
         The method returns this dictionary as output.
         """
-        db_data = self.fetch_postgres_relation_data() or {}
+        db_data = self.fetch_postgres_relation_data()
         env = {
             "DEMO_SERVER_DB_HOST": db_data.get("db_host", None),
             "DEMO_SERVER_DB_PORT": db_data.get("db_port", None),
@@ -164,7 +172,7 @@ class FastAPIDemoCharm(ops.CharmBase):
         }
         return env
 
-    def fetch_postgres_relation_data(self) -> Optional[dict]:
+    def fetch_postgres_relation_data(self) -> dict:
         """Fetch postgres relation data.
 
         This function retrieves relation data from a postgres database using
@@ -187,7 +195,7 @@ class FastAPIDemoCharm(ops.CharmBase):
                 "db_password": data["password"],
             }
             return db_data
-        self.unit.status = ops.WaitingStatus("Waiting for database relation")
+        raise DatabaseNotReady()
 
     @property
     def _pebble_layer(self):

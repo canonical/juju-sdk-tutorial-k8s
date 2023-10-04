@@ -5,16 +5,13 @@
 # Learn more at: https://juju.is/docs/sdk
 import logging
 
-from ops.charm import CharmBase
-from ops.main import main
-from ops.model import ActiveStatus
-from ops.pebble import Layer
+import ops
 
 # Log messages can be retrieved using juju debug-log
 logger = logging.getLogger(__name__)
 
 
-class FastAPIDemoCharm(CharmBase):
+class FastAPIDemoCharm(ops.CharmBase):
     """Charm the service."""
 
     def __init__(self, *args):
@@ -38,7 +35,7 @@ class FastAPIDemoCharm(CharmBase):
         container.replan()
         # Learn more about statuses in the SDK docs:
         # https://juju.is/docs/sdk/constructs#heading--statuses
-        self.unit.status = ActiveStatus()
+        self.unit.status = ops.ActiveStatus()
 
     @property
     def _pebble_layer(self):
@@ -63,8 +60,8 @@ class FastAPIDemoCharm(CharmBase):
                 }
             },
         }
-        return Layer(pebble_layer)
+        return ops.pebble.Layer(pebble_layer)
 
 
 if __name__ == "__main__":  # pragma: nocover
-    main(FastAPIDemoCharm)
+    ops.main(FastAPIDemoCharm)

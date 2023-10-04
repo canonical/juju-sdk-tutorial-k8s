@@ -128,6 +128,7 @@ class FastAPIDemoCharm(ops.CharmBase):
                 "db_password": data["password"],
             }
             return db_data
+        raise DatabaseNotReady()
 
     @property
     def _pebble_layer(self):

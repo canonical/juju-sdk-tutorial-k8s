@@ -14,6 +14,10 @@ from charms.data_platform_libs.v0.data_interfaces import DatabaseRequires
 logger = logging.getLogger(__name__)
 
 
+class DatabaseNotReady(Exception):
+    """Raised when the database is not yet available."""
+
+
 class FastAPIDemoCharm(ops.CharmBase):
     """Charm the service."""
 
@@ -63,7 +67,11 @@ class FastAPIDemoCharm(ops.CharmBase):
         # https://juju.is/docs/sdk/constructs#heading--statuses
         self.unit.status = ops.MaintenanceStatus("Assembling pod spec")
         if self.container.can_connect():
-            new_layer = self._pebble_layer.to_dict()
+            try:
+                new_layer = self._pebble_layer.to_dict()
+            except DatabaseNotReady:
+                self.unit.status = ops.WaitingStatus("Waiting for database relation")
+                return
             # Get the current pebble layer config
             services = self.container.get_plan().to_dict().get("services", {})
             if services != new_layer["services"]:
@@ -120,7 +128,6 @@ class FastAPIDemoCharm(ops.CharmBase):
                 "db_password": data["password"],
             }
             return db_data
-        self.unit.status = ops.WaitingStatus("Waiting for database relation")
 
     @property
     def _pebble_layer(self):

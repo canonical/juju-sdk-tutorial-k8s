@@ -5,20 +5,14 @@
 # Learn more at: https://juju.is/docs/sdk
 import logging
 
+import ops
 import requests
-from ops.charm import CharmBase
-from ops.main import main
-from ops.model import ActiveStatus
-from ops.model import BlockedStatus
-from ops.model import MaintenanceStatus
-from ops.model import WaitingStatus
-from ops.pebble import Layer
 
 # Log messages can be retrieved using juju debug-log
 logger = logging.getLogger(__name__)
 
 
-class FastAPIDemoCharm(CharmBase):
+class FastAPIDemoCharm(ops.CharmBase):
     """Charm the service."""
 
     def __init__(self, *args):
@@ -33,7 +27,7 @@ class FastAPIDemoCharm(CharmBase):
         logger.debug("New application port is requested: %s", port)
 
         if int(port) == 22:
-            self.unit.status = BlockedStatus("Invalid port number, 22 is reserved for SSH")
+            self.unit.status = ops.BlockedStatus("Invalid port number, 22 is reserved for SSH")
             return
 
         self._update_layer_and_restart(None)
@@ -50,7 +44,7 @@ class FastAPIDemoCharm(CharmBase):
 
         # Learn more about statuses in the SDK docs:
         # https://juju.is/docs/sdk/constructs#heading--statuses
-        self.unit.status = MaintenanceStatus("Assembling pod spec")
+        self.unit.status = ops.MaintenanceStatus("Assembling pod spec")
         if self.container.can_connect():
             new_layer = self._pebble_layer.to_dict()
             # Get the current pebble layer config
@@ -65,9 +59,9 @@ class FastAPIDemoCharm(CharmBase):
 
             # add workload version in juju status
             self.unit.set_workload_version(self.version)
-            self.unit.status = ActiveStatus()
+            self.unit.status = ops.ActiveStatus()
         else:
-            self.unit.status = WaitingStatus("Waiting for Pebble in workload container")
+            self.unit.status = ops.WaitingStatus("Waiting for Pebble in workload container")
 
     @property
     def _pebble_layer(self):
@@ -92,7 +86,7 @@ class FastAPIDemoCharm(CharmBase):
                 }
             },
         }
-        return Layer(pebble_layer)
+        return ops.pebble.Layer(pebble_layer)
 
     @property
     def version(self) -> str:
@@ -114,4 +108,4 @@ class FastAPIDemoCharm(CharmBase):
 
 
 if __name__ == "__main__":  # pragma: nocover
-    main(FastAPIDemoCharm)
+    ops.main(FastAPIDemoCharm)

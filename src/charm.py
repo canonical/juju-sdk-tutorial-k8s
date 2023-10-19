@@ -72,7 +72,8 @@ class FastAPIDemoCharm(CharmBase):
         if int(port) == 22:
             self.unit.status = BlockedStatus("Invalid port number, 22 is reserved for SSH")
             return
-
+        
+        self._handle_ports()
         self._update_layer_and_restart(None)
 
     def _count(self, event) -> None:
@@ -257,7 +258,18 @@ class FastAPIDemoCharm(CharmBase):
             return {}
         data = self.peers.data[self.app].get(key, "")
         return json.loads(data) if data else {}
+    
+    def _handle_ports(self):
+        port = int(self.config["server-port"])
+        opened_ports = self.unit.opened_ports()
 
+        if port in [i.port for i in opened_ports]:
+            return
+
+        for o_port in opened_ports:
+            self.unit.close_port(o_port.protocol, o_port.port)
+
+        self.unit.open_port("tcp", port)
 
 if __name__ == "__main__":  # pragma: nocover
     main(FastAPIDemoCharm)

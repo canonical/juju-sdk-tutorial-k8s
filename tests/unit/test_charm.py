@@ -55,3 +55,33 @@ class TestCharm(unittest.TestCase):
         self.assertTrue(service.is_running())
         # Ensure we set an ActiveStatus with no message
         self.assertEqual(self.harness.model.unit.status, ops.ActiveStatus())
+
+        # Check port configuration for SSH (port 22) and assert BlockedStatus
+        self._assert_port_configuration(22, ops.BlockedStatus('Invalid port number, 22 is reserved for SSH'))
+        # Check port configuration for a custom port (e.g., 1234) and assert ActiveStatus 
+        self._assert_port_configuration(1234, ops.ActiveStatus())
+
+    def _assert_port_configuration(self, port_number, expected_status):
+
+        # Update the server-port configuration with the specified port number
+        self.harness.update_config({"server-port": port_number})
+
+        # Get the set of opened ports from the juju unit
+        currently_opened_ports = self.harness.model.unit.opened_ports()
+
+        # Extract the port numbers from the opened ports set
+        port_numbers = {port.port for port in currently_opened_ports}
+
+        # Retrieve the updated server port configuration from the charm config
+        server_port_config = self.harness.model.config.get("server-port")
+
+        # Check if the server port is 22 (reserved for SSH)
+        if port_number == 22:
+            # Assert that the SSH port is not in the set of opened ports
+            self.assertNotIn(server_port_config, port_numbers)
+        else:
+            # Assert that the specified port is in the set of opened ports
+            self.assertIn(server_port_config, port_numbers)
+
+        # Assert that the unit status matches the expected status
+        self.assertEqual(self.harness.model.unit.status, expected_status)

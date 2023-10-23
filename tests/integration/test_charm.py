@@ -52,6 +52,7 @@ async def test_database_integration(ops_test: OpsTest):
         application_name="postgresql-k8s",
         entity_url="https://charmhub.io/postgresql-k8s",
         channel="14/stable",
+        trust= True
     )
     await ops_test.model.integrate(f"{APP_NAME}", "postgresql-k8s")
     await ops_test.model.wait_for_idle(

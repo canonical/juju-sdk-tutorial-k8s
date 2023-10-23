@@ -4,7 +4,7 @@
 #
 # Learn more at: https://juju.is/docs/sdk
 from charm import FastAPIDemoCharm
-from scenario import Relation, State, Context, Container, Action
+from scenario import Relation, State, Context, Container, Action, PeerRelation
 
 import unittest
 import unittest.mock
@@ -73,3 +73,64 @@ class TestCharm(unittest.TestCase):
             "db-username": "foo",
             "db-password": "bar",
         }
+
+    @unittest.mock.patch("charm.LogProxyConsumer")
+    @unittest.mock.patch("charm.MetricsEndpointProvider")
+    @unittest.mock.patch("charm.GrafanaDashboardProvider")
+    def test_open_port(self, *_):
+        # use scenario.Context to declare what charm we are testing
+        ctx = Context(
+            FastAPIDemoCharm,
+            meta={
+                "name": "demo-api-charm",
+                "containers": {"demo-server": {}},
+                "peers": {"fastapi-peer": {"interface": "fastapi_demo_peers"}},
+                "requires": {
+                    "database": {
+                        "interface": "postgresql_client",
+                    }
+                },
+            },
+            config={
+                "options": {
+                    "server-port": {
+                        "default": 8000,
+                    }
+                }
+            },
+            actions={
+                "get-db-info": {
+                    "params": {"show-password": {"default": False, "type": "boolean"}}
+                }
+            },
+        )
+
+        state_in = State(
+            leader=True,
+            relations=[
+                Relation(
+                    endpoint="database",
+                    interface="postgresql_client",
+                    remote_app_name="postgresql-k8s",
+                    local_unit_data={},
+                    remote_app_data={
+                        "endpoints": "127.0.0.1:5432",
+                        "username": "foo",
+                        "password": "bar",
+                    },
+                ),
+                PeerRelation(
+                    endpoint="fastapi-peer",
+                    peers_data={"unit_stats": {"started_counter": "0"}},
+                )
+            ],
+            containers=[
+                Container(name="demo-server", can_connect=True),
+            ],
+        )
+
+        state1 = ctx.run("config_changed", state_in)
+
+        assert len(state1.opened_ports) == 1
+        assert state1.opened_ports[0].port == 8000
+        assert state1.opened_ports[0].protocol == "tcp"

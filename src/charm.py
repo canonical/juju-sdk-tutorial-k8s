@@ -261,15 +261,7 @@ class FastAPIDemoCharm(CharmBase):
     
     def _handle_ports(self):
         port = int(self.config["server-port"])
-        opened_ports = self.unit.opened_ports()
-
-        if port in [i.port for i in opened_ports]:
-            return
-
-        for o_port in opened_ports:
-            self.unit.close_port(o_port.protocol, o_port.port)
-
-        self.unit.open_port("tcp", port)
+        self.unit.set_ports(port)
 
 if __name__ == "__main__":  # pragma: nocover
     main(FastAPIDemoCharm)

@@ -19,6 +19,7 @@ from ops.model import ActiveStatus
 from ops.model import BlockedStatus
 from ops.model import MaintenanceStatus
 from ops.model import WaitingStatus
+from ops.pebble import ConnectionError
 from ops.pebble import Layer
 
 # Log messages can be retrieved using juju debug-log
@@ -137,8 +138,8 @@ class FastAPIDemoCharm(CharmBase):
         # Learn more about statuses in the SDK docs:
         # https://juju.is/docs/sdk/constructs#heading--statuses
         self.unit.status = MaintenanceStatus("Assembling pod spec")
-        if self.container.can_connect():
-            new_layer = self._pebble_layer.to_dict()
+        new_layer = self._pebble_layer.to_dict()
+        try:
             # Get the current pebble layer config
             services = self.container.get_plan().to_dict().get("services", {})
             if services != new_layer["services"]:
@@ -152,7 +153,7 @@ class FastAPIDemoCharm(CharmBase):
             # add workload version in juju status
             self.unit.set_workload_version(self.version)
             self.unit.status = ActiveStatus()
-        else:
+        except ConnectionError:
             self.unit.status = WaitingStatus("Waiting for Pebble in workload container")
 
     @property
@@ -227,14 +228,16 @@ class FastAPIDemoCharm(CharmBase):
     @property
     def version(self) -> str:
         """Reports the current workload (FastAPI app) version."""
-        if self.container.can_connect() and self.container.get_services(self.pebble_service_name):
-            try:
+        try:
+            if self.container.get_services(self.pebble_service_name):
                 return self._request_version()
-            # Catching Exception is not ideal, but we don't care much for the error here, and just
-            # default to setting a blank version since there isn't much the admin can do!
-            except Exception as e:
-                logger.warning("unable to get version from API: %s", str(e))
-                logger.exception(e)
+        except ConnectionError:
+            pass
+        # Catching Exception is not ideal, but we don't care much for the error here, and just
+        # default to setting a blank version since there isn't much the admin can do!
+        except Exception as e:
+            logger.warning("unable to get version from API: %s", str(e))
+            logger.exception(e)
         return ""
 
     def _request_version(self) -> str:

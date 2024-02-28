@@ -59,9 +59,9 @@ def test_pebble_layer(harness: ops.testing.Harness[FastAPIDemoCharm]):
     )
     status = harness.model.unit.status
 
-    # Check that we have the plan we expected
+    # Check that we have the plan we expected:
     assert updated_plan == expected_plan
-    # Check the service was started
+    # Check the service was started:
     assert service.is_running()
-    # Ensure we set an ActiveStatus with no message
+    # Ensure we set an ActiveStatus with no message:
     assert status == ops.ActiveStatus()

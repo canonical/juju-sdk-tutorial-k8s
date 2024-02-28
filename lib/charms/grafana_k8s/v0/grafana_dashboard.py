@@ -218,8 +218,7 @@ LIBAPI = 0
 
 # Increment this PATCH version before using `charmcraft publish-lib` or reset
 # to 0 if you are raising the major API version
-
-LIBPATCH = 35
+LIBPATCH = 19
 
 logger = logging.getLogger(__name__)
 
@@ -230,15 +229,15 @@ RELATION_INTERFACE_NAME = "grafana_dashboard"
 
 TOPOLOGY_TEMPLATE_DROPDOWNS = [  # type: ignore
     {
-        "allValue": ".*",
+        "allValue": None,
         "datasource": "${prometheusds}",
         "definition": "label_values(up,juju_model)",
         "description": None,
         "error": None,
         "hide": 0,
-        "includeAll": True,
+        "includeAll": False,
         "label": "Juju model",
-        "multi": True,
+        "multi": False,
         "name": "juju_model",
         "query": {
             "query": "label_values(up,juju_model)",
@@ -255,18 +254,18 @@ TOPOLOGY_TEMPLATE_DROPDOWNS = [  # type: ignore
         "useTags": False,
     },
     {
-        "allValue": ".*",
+        "allValue": None,
         "datasource": "${prometheusds}",
-        "definition": 'label_values(up{juju_model=~"$juju_model"},juju_model_uuid)',
+        "definition": 'label_values(up{juju_model="$juju_model"},juju_model_uuid)',
         "description": None,
         "error": None,
         "hide": 0,
-        "includeAll": True,
+        "includeAll": False,
         "label": "Juju model uuid",
-        "multi": True,
+        "multi": False,
         "name": "juju_model_uuid",
         "query": {
-            "query": 'label_values(up{juju_model=~"$juju_model"},juju_model_uuid)',
+            "query": 'label_values(up{juju_model="$juju_model"},juju_model_uuid)',
             "refId": "StandardVariableQuery",
         },
         "refresh": 1,
@@ -280,18 +279,18 @@ TOPOLOGY_TEMPLATE_DROPDOWNS = [  # type: ignore
         "useTags": False,
     },
     {
-        "allValue": ".*",
+        "allValue": None,
         "datasource": "${prometheusds}",
-        "definition": 'label_values(up{juju_model=~"$juju_model",juju_model_uuid=~"$juju_model_uuid"},juju_application)',
+        "definition": 'label_values(up{juju_model="$juju_model",juju_model_uuid="$juju_model_uuid"},juju_application)',
         "description": None,
         "error": None,
         "hide": 0,
-        "includeAll": True,
+        "includeAll": False,
         "label": "Juju application",
-        "multi": True,
+        "multi": False,
         "name": "juju_application",
         "query": {
-            "query": 'label_values(up{juju_model=~"$juju_model",juju_model_uuid=~"$juju_model_uuid"},juju_application)',
+            "query": 'label_values(up{juju_model="$juju_model",juju_model_uuid="$juju_model_uuid"},juju_application)',
             "refId": "StandardVariableQuery",
         },
         "refresh": 1,
@@ -305,18 +304,18 @@ TOPOLOGY_TEMPLATE_DROPDOWNS = [  # type: ignore
         "useTags": False,
     },
     {
-        "allValue": ".*",
+        "allValue": None,
         "datasource": "${prometheusds}",
-        "definition": 'label_values(up{juju_model=~"$juju_model",juju_model_uuid=~"$juju_model_uuid",juju_application=~"$juju_application"},juju_unit)',
+        "definition": 'label_values(up{juju_model="$juju_model",juju_model_uuid="$juju_model_uuid",juju_application="$juju_application"},juju_unit)',
         "description": None,
         "error": None,
         "hide": 0,
-        "includeAll": True,
+        "includeAll": False,
         "label": "Juju unit",
-        "multi": True,
+        "multi": False,
         "name": "juju_unit",
         "query": {
-            "query": 'label_values(up{juju_model=~"$juju_model",juju_model_uuid=~"$juju_model_uuid",juju_application=~"$juju_application"},juju_unit)',
+            "query": 'label_values(up{juju_model="$juju_model",juju_model_uuid="$juju_model_uuid",juju_application="$juju_application"},juju_unit)',
             "refId": "StandardVariableQuery",
         },
         "refresh": 1,
@@ -336,9 +335,9 @@ DATASOURCE_TEMPLATE_DROPDOWNS = [  # type: ignore
         "description": None,
         "error": None,
         "hide": 0,
-        "includeAll": True,
-        "label": "Prometheus datasource",
-        "multi": True,
+        "includeAll": False,
+        "label": None,
+        "multi": False,
         "name": "prometheusds",
         "options": [],
         "query": "prometheus",
@@ -351,9 +350,9 @@ DATASOURCE_TEMPLATE_DROPDOWNS = [  # type: ignore
         "description": None,
         "error": None,
         "hide": 0,
-        "includeAll": True,
-        "label": "Loki datasource",
-        "multi": True,
+        "includeAll": False,
+        "label": None,
+        "multi": False,
         "name": "lokids",
         "options": [],
         "query": "loki",
@@ -367,17 +366,17 @@ DATASOURCE_TEMPLATE_DROPDOWNS = [  # type: ignore
 REACTIVE_CONVERTER = {  # type: ignore
     "allValue": None,
     "datasource": "${prometheusds}",
-    "definition": 'label_values(up{juju_model=~"$juju_model",juju_model_uuid=~"$juju_model_uuid",juju_application=~"$juju_application"},host)',
+    "definition": 'label_values(up{juju_model="$juju_model",juju_model_uuid="$juju_model_uuid",juju_application="$juju_application"},host)',
     "description": None,
     "error": None,
     "hide": 0,
-    "includeAll": True,
+    "includeAll": False,
     "label": "hosts",
     "multi": True,
     "name": "host",
     "options": [],
     "query": {
-        "query": 'label_values(up{juju_model=~"$juju_model",juju_model_uuid=~"$juju_model_uuid",juju_application=~"$juju_application"},host)',
+        "query": 'label_values(up{juju_model="$juju_model",juju_model_uuid="$juju_model_uuid",juju_application="$juju_application"},host)',
         "refId": "StandardVariableQuery",
     },
     "refresh": 1,
@@ -525,7 +524,7 @@ def _validate_relation_by_interface_and_direction(
     relation = charm.meta.relations[relation_name]
 
     actual_relation_interface = relation.interface_name
-    if actual_relation_interface and actual_relation_interface != expected_relation_interface:
+    if actual_relation_interface != expected_relation_interface:
         raise RelationInterfaceMismatchError(
             relation_name, expected_relation_interface, actual_relation_interface
         )
@@ -582,7 +581,7 @@ def _convert_dashboard_fields(content: str, inject_dropdowns: bool = True) -> st
 
     # If no existing template variables exist, just insert our own
     if "templating" not in dict_content:
-        dict_content["templating"] = {"list": list(template_dropdowns)}  # type: ignore
+        dict_content["templating"] = {"list": [d for d in template_dropdowns]}  # type: ignore
     else:
         # Otherwise, set a flag so we can go back later
         existing_templates = True
@@ -609,31 +608,70 @@ def _replace_template_fields(  # noqa: C901
     If existing datasource variables are present, try to substitute them.
     """
     replacements = {"loki": "${lokids}", "prometheus": "${prometheusds}"}
-    used_replacements = []  # type: List[str]
+    used_replacements = []
 
     # If any existing datasources match types we know, or we didn't find
     # any templating variables at all, template them.
     if datasources or not existing_templates:
-        panels = dict_content.get("panels", {})
-        if panels:
-            dict_content["panels"] = _template_panels(
-                panels, replacements, used_replacements, existing_templates, datasources
-            )
+        panels = dict_content["panels"]
 
-        # Find panels nested under rows
-        rows = dict_content.get("rows", {})
-        if rows:
-            for row_idx, row in enumerate(rows):
-                if "panels" in row.keys():
-                    rows[row_idx]["panels"] = _template_panels(
-                        row["panels"],
-                        replacements,
-                        used_replacements,
-                        existing_templates,
-                        datasources,
-                    )
+        # Go through all the panels. If they have a datasource set, AND it's one
+        # that we can convert to ${lokids} or ${prometheusds}, by stripping off the
+        # ${} templating and comparing the name to the list we built, replace it,
+        # otherwise, leave it alone.
+        #
+        # COS only knows about Prometheus and Loki.
+        for panel in panels:
+            if "datasource" not in panel or not panel.get("datasource"):
+                continue
+            if not existing_templates:
+                datasource = panel.get("datasource")
+                if type(datasource) == str:
+                    if "loki" in datasource:
+                        panel["datasource"] = "${lokids}"
+                    else:
+                        panel["datasource"] = "${prometheusds}"
+                elif type(datasource) == dict:
+                    # In dashboards exported by Grafana 9, datasource type is dict
+                    dstype = datasource.get("type", "")
+                    if dstype == "loki":
+                        panel["datasource"]["uid"] = "${lokids}"
+                    elif dstype == "prometheus":
+                        panel["datasource"]["uid"] = "${prometheusds}"
+                    else:
+                        logger.debug("Unrecognized datasource type '%s'; skipping", dstype)
+                        continue
+                else:
+                    logger.error("Unknown datasource format: skipping")
+                    continue
+            else:
+                if type(panel["datasource"]) == str:
+                    if panel["datasource"].lower() in replacements.values():
+                        # Already a known template variable
+                        continue
+                    # Strip out variable characters and maybe braces
+                    ds = re.sub(r"(\$|\{|\})", "", panel["datasource"])
+                    replacement = replacements.get(datasources[ds], "")
+                    if replacement:
+                        used_replacements.append(ds)
+                    panel["datasource"] = replacement or panel["datasource"]
+                elif type(panel["datasource"]) == dict:
+                    dstype = panel["datasource"].get("type", "")
+                    if panel["datasource"].get("uid", "").lower() in replacements.values():
+                        # Already a known template variable
+                        continue
+                    # Strip out variable characters and maybe braces
+                    ds = re.sub(r"(\$|\{|\})", "", panel["datasource"].get("uid", ""))
+                    replacement = replacements.get(datasources[ds], "")
+                    if replacement:
+                        used_replacements.append(ds)
+                        panel["datasource"]["uid"] = replacement
+                else:
+                    logger.error("Unknown datasource format: skipping")
+                    continue
 
-            dict_content["rows"] = rows
+        # Put our substitutions back
+        dict_content["panels"] = panels
 
     # Finally, go back and pop off the templates we stubbed out
     deletions = []
@@ -645,82 +683,6 @@ def _replace_template_fields(  # noqa: C901
         dict_content["templating"]["list"].remove(d)
 
     return dict_content
-
-
-def _template_panels(
-    panels: dict,
-    replacements: dict,
-    used_replacements: list,
-    existing_templates: bool,
-    datasources: dict,
-) -> dict:
-    """Iterate through a `panels` object and template it appropriately."""
-    # Go through all the panels. If they have a datasource set, AND it's one
-    # that we can convert to ${lokids} or ${prometheusds}, by stripping off the
-    # ${} templating and comparing the name to the list we built, replace it,
-    # otherwise, leave it alone.
-    #
-    for panel in panels:
-        if "datasource" not in panel or not panel.get("datasource"):
-            continue
-        if not existing_templates:
-            datasource = panel.get("datasource")
-            if isinstance(datasource, str):
-                if "loki" in datasource:
-                    panel["datasource"] = "${lokids}"
-                elif "grafana" in datasource:
-                    continue
-                else:
-                    panel["datasource"] = "${prometheusds}"
-            elif isinstance(datasource, dict):
-                # In dashboards exported by Grafana 9, datasource type is dict
-                dstype = datasource.get("type", "")
-                if dstype == "loki":
-                    panel["datasource"]["uid"] = "${lokids}"
-                elif dstype == "prometheus":
-                    panel["datasource"]["uid"] = "${prometheusds}"
-                else:
-                    logger.debug("Unrecognized datasource type '%s'; skipping", dstype)
-                    continue
-            else:
-                logger.error("Unknown datasource format: skipping")
-                continue
-        else:
-            if isinstance(panel["datasource"], str):
-                if panel["datasource"].lower() in replacements.values():
-                    # Already a known template variable
-                    continue
-                # Strip out variable characters and maybe braces
-                ds = re.sub(r"(\$|\{|\})", "", panel["datasource"])
-
-                if ds not in datasources.keys():
-                    # Unknown, non-templated datasource, potentially a Grafana builtin
-                    continue
-
-                replacement = replacements.get(datasources[ds], "")
-                if replacement:
-                    used_replacements.append(ds)
-                panel["datasource"] = replacement or panel["datasource"]
-            elif isinstance(panel["datasource"], dict):
-                dstype = panel["datasource"].get("type", "")
-                if panel["datasource"].get("uid", "").lower() in replacements.values():
-                    # Already a known template variable
-                    continue
-                # Strip out variable characters and maybe braces
-                ds = re.sub(r"(\$|\{|\})", "", panel["datasource"].get("uid", ""))
-
-                if ds not in datasources.keys():
-                    # Unknown, non-templated datasource, potentially a Grafana builtin
-                    continue
-
-                replacement = replacements.get(datasources[ds], "")
-                if replacement:
-                    used_replacements.append(ds)
-                    panel["datasource"]["uid"] = replacement
-            else:
-                logger.error("Unknown datasource format: skipping")
-                continue
-    return panels
 
 
 def _inject_labels(content: str, topology: dict, transformer: "CosTool") -> str:
@@ -790,7 +752,7 @@ def _inject_labels(content: str, topology: dict, transformer: "CosTool") -> str:
 
     # We need to use an index so we can insert the changed element back later
     for panel_idx, panel in enumerate(panels):
-        if not isinstance(panel, dict):
+        if type(panel) is not dict:
             continue
 
         # Use the index to insert it back in the same location
@@ -830,18 +792,18 @@ def _modify_panel(panel: dict, topology: dict, transformer: "CosTool") -> dict:
 
         if "datasource" not in panel.keys():
             continue
-
-        if isinstance(panel["datasource"], str):
-            if panel["datasource"] not in known_datasources:
-                continue
-            querytype = known_datasources[panel["datasource"]]
-        elif isinstance(panel["datasource"], dict):
-            if panel["datasource"]["uid"] not in known_datasources:
-                continue
-            querytype = known_datasources[panel["datasource"]["uid"]]
         else:
-            logger.error("Unknown datasource format: skipping")
-            continue
+            if type(panel["datasource"]) == str:
+                if panel["datasource"] not in known_datasources:
+                    continue
+                querytype = known_datasources[panel["datasource"]]
+            elif type(panel["datasource"]) == dict:
+                if panel["datasource"]["uid"] not in known_datasources:
+                    continue
+                querytype = known_datasources[panel["datasource"]["uid"]]
+            else:
+                logger.error("Unknown datasource format: skipping")
+                continue
 
         # Capture all values inside `[]` into a list which we'll iterate over later to
         # put them back in-order. Then apply the regex again and replace everything with
@@ -901,12 +863,13 @@ def _type_convert_stored(obj):
     """Convert Stored* to their appropriate types, recursively."""
     if isinstance(obj, StoredList):
         return list(map(_type_convert_stored, obj))
-    if isinstance(obj, StoredDict):
+    elif isinstance(obj, StoredDict):
         rdict = {}  # type: Dict[Any, Any]
         for k in obj.keys():
             rdict[k] = _type_convert_stored(obj[k])
         return rdict
-    return obj
+    else:
+        return obj
 
 
 class GrafanaDashboardsChanged(EventBase):
@@ -955,7 +918,7 @@ class GrafanaDashboardEvent(EventBase):
         """Restore grafana source information."""
         self.error_message = snapshot["error_message"]
         self.valid = snapshot["valid"]
-        self.errors = json.loads(str(snapshot["errors"]))
+        self.errors = json.loads(snapshot["errors"])
 
 
 class GrafanaProviderEvents(ObjectEvents):
@@ -968,7 +931,7 @@ class GrafanaDashboardProvider(Object):
     """An API to provide Grafana dashboards to a Grafana charm."""
 
     _stored = StoredState()
-    on = GrafanaProviderEvents()  # pyright: ignore
+    on = GrafanaProviderEvents()
 
     def __init__(
         self,
@@ -1046,7 +1009,7 @@ class GrafanaDashboardProvider(Object):
         self._dashboards_path = dashboards_path
 
         # No peer relation bucket we can rely on providers, keep StoredState here, too
-        self._stored.set_default(dashboard_templates={})  # type: ignore
+        self._stored.set_default(dashboard_templates={})
 
         self.framework.observe(self._charm.on.leader_elected, self._update_all_dashboards_from_dir)
         self.framework.observe(self._charm.on.upgrade_charm, self._update_all_dashboards_from_dir)
@@ -1072,7 +1035,7 @@ class GrafanaDashboardProvider(Object):
         """
         # Update of storage must be done irrespective of leadership, so
         # that the stored state is there when this unit becomes leader.
-        stored_dashboard_templates: Any = self._stored.dashboard_templates  # pyright: ignore
+        stored_dashboard_templates = self._stored.dashboard_templates
 
         encoded_dashboard = _encode_dashboard_content(content)
 
@@ -1093,7 +1056,7 @@ class GrafanaDashboardProvider(Object):
         """Remove all dashboards to the relation added via :method:`add_dashboard`."""
         # Update of storage must be done irrespective of leadership, so
         # that the stored state is there when this unit becomes leader.
-        stored_dashboard_templates: Any = self._stored.dashboard_templates  # pyright: ignore
+        stored_dashboard_templates = self._stored.dashboard_templates
 
         for dashboard_id in list(stored_dashboard_templates.keys()):
             if dashboard_id.startswith("prog:"):
@@ -1120,7 +1083,7 @@ class GrafanaDashboardProvider(Object):
         # Ensure we do not leave outdated dashboards by removing from stored all
         # the encoded dashboards that start with "file/".
         if self._dashboards_path:
-            stored_dashboard_templates: Any = self._stored.dashboard_templates  # pyright: ignore
+            stored_dashboard_templates = self._stored.dashboard_templates
 
             for dashboard_id in list(stored_dashboard_templates.keys()):
                 if dashboard_id.startswith("file:"):
@@ -1174,7 +1137,7 @@ class GrafanaDashboardProvider(Object):
                 e.grafana_dashboards_absolute_path,
                 e.message,
             )
-            stored_dashboard_templates: Any = self._stored.dashboard_templates  # pyright: ignore
+            stored_dashboard_templates = self._stored.dashboard_templates
 
             for dashboard_id in list(stored_dashboard_templates.keys()):
                 if dashboard_id.startswith("file:"):
@@ -1195,7 +1158,6 @@ class GrafanaDashboardProvider(Object):
                 `grafana_dashboaard` relationship is joined
         """
         if self._charm.unit.is_leader():
-            self._update_all_dashboards_from_dir()
             self._upset_dashboards_on_relation(event.relation)
 
     def _on_grafana_dashboard_relation_changed(self, event: RelationChangedEvent) -> None:
@@ -1205,7 +1167,7 @@ class GrafanaDashboardProvider(Object):
             event: The `RelationChangedEvent` that triggered this handler.
         """
         if self._charm.unit.is_leader():
-            data = json.loads(event.relation.data[event.app].get("event", "{}"))  # type: ignore
+            data = json.loads(event.relation.data[event.app].get("event", "{}"))
 
             if not data:
                 return
@@ -1213,18 +1175,16 @@ class GrafanaDashboardProvider(Object):
             valid = bool(data.get("valid", True))
             errors = data.get("errors", [])
             if valid and not errors:
-                self.on.dashboard_status_changed.emit(valid=valid)  # pyright: ignore
+                self.on.dashboard_status_changed.emit(valid=valid)
             else:
-                self.on.dashboard_status_changed.emit(  # pyright: ignore
-                    valid=valid, errors=errors
-                )
+                self.on.dashboard_status_changed.emit(valid=valid, errors=errors)
 
     def _upset_dashboards_on_relation(self, relation: Relation) -> None:
         """Update the dashboards in the relation data bucket."""
         # It's completely ridiculous to add a UUID, but if we don't have some
         # pseudo-random value, this never makes it across 'juju set-state'
         stored_data = {
-            "templates": _type_convert_stored(self._stored.dashboard_templates),  # pyright: ignore
+            "templates": _type_convert_stored(self._stored.dashboard_templates),
             "uuid": str(uuid.uuid4()),
         }
 
@@ -1253,13 +1213,13 @@ class GrafanaDashboardProvider(Object):
     @property
     def dashboard_templates(self) -> List:
         """Return a list of the known dashboard templates."""
-        return list(self._stored.dashboard_templates.values())  # type: ignore
+        return [v for v in self._stored.dashboard_templates.values()]
 
 
 class GrafanaDashboardConsumer(Object):
     """A consumer object for working with Grafana Dashboards."""
 
-    on = GrafanaDashboardEvents()  # pyright: ignore
+    on = GrafanaDashboardEvents()
     _stored = StoredState()
 
     def __init__(
@@ -1307,7 +1267,7 @@ class GrafanaDashboardConsumer(Object):
         self._relation_name = relation_name
         self._tranformer = CosTool(self._charm)
 
-        self._stored.set_default(dashboards={})  # type: ignore
+        self._stored.set_default(dashboards=dict())
 
         self.framework.observe(
             self._charm.on[self._relation_name].relation_changed,
@@ -1351,13 +1311,13 @@ class GrafanaDashboardConsumer(Object):
             changes = self._render_dashboards_and_signal_changed(event.relation)
 
         if changes:
-            self.on.dashboards_changed.emit()  # pyright: ignore
+            self.on.dashboards_changed.emit()
 
     def _on_grafana_peer_changed(self, _: RelationChangedEvent) -> None:
         """Emit dashboard events on peer events so secondary charm data updates."""
         if self._charm.unit.is_leader():
             return
-        self.on.dashboards_changed.emit()  # pyright: ignore
+        self.on.dashboards_changed.emit()
 
     def update_dashboards(self, relation: Optional[Relation] = None) -> None:
         """Re-establish dashboards on one or more relations.
@@ -1404,7 +1364,7 @@ class GrafanaDashboardConsumer(Object):
         """
         other_app = relation.app
 
-        raw_data = relation.data[other_app].get("dashboards", "")  # pyright: ignore
+        raw_data = relation.data[other_app].get("dashboards", {})  # type: ignore
 
         if not raw_data:
             logger.warning(
@@ -1419,6 +1379,11 @@ class GrafanaDashboardConsumer(Object):
         # The only piece of data needed on this side of the relations is "templates"
         templates = data.pop("templates")
 
+        # Import only if a charmed operator uses the consumer, we don't impose these
+        # dependencies on the client
+        from jinja2 import Template
+        from jinja2.exceptions import TemplateSyntaxError
+
         # The dashboards are WAY too big since this ultimately calls out to Juju to
         # set the relation data, and it overflows the maximum argument length for
         # subprocess, so we have to use b64, annoyingly.
@@ -1431,12 +1396,14 @@ class GrafanaDashboardConsumer(Object):
         relation_has_invalid_dashboards = False
 
         for _, (fname, template) in enumerate(templates.items()):
+            decoded_content = None
             content = None
             error = None
             topology = template.get("juju_topology", {})
             try:
-                content = _decode_dashboard_content(template["content"])
+                decoded_content = _decode_dashboard_content(template["content"])
                 inject_dropdowns = template.get("inject_dropdowns", True)
+                content = Template(decoded_content).render()
                 content = self._manage_dashboard_uid(content, template)
                 content = _convert_dashboard_fields(content, inject_dropdowns)
 
@@ -1451,6 +1418,9 @@ class GrafanaDashboardConsumer(Object):
                 error = str(e.msg)
                 logger.warning("Invalid JSON in Grafana dashboard: {}".format(fname))
                 continue
+            except TemplateSyntaxError as e:
+                error = str(e)
+                relation_has_invalid_dashboards = True
 
             # Prepend the relation name and ID to the dashboard ID to avoid clashes with
             # multiple relations with apps from the same charm, or having dashboards with
@@ -1497,27 +1467,28 @@ class GrafanaDashboardConsumer(Object):
 
             # Dropping dashboards for a relation needs to be signalled
             return True
+        else:
+            stored_data = rendered_dashboards
+            currently_stored_data = self._get_stored_dashboards(relation.id)
 
-        stored_data = rendered_dashboards
-        currently_stored_data = self._get_stored_dashboards(relation.id)
+            coerced_data = (
+                _type_convert_stored(currently_stored_data) if currently_stored_data else {}
+            )
 
-        coerced_data = _type_convert_stored(currently_stored_data) if currently_stored_data else {}
-
-        if not coerced_data == stored_data:
-            stored_dashboards = self.get_peer_data("dashboards")
-            stored_dashboards[relation.id] = stored_data
-            self.set_peer_data("dashboards", stored_dashboards)
-            return True
-        return None  # type: ignore
+            if not coerced_data == stored_data:
+                stored_dashboards = self.get_peer_data("dashboards")
+                stored_dashboards[relation.id] = stored_data
+                self.set_peer_data("dashboards", stored_dashboards)
+                return True
 
     def _manage_dashboard_uid(self, dashboard: str, template: dict) -> str:
         """Add an uid to the dashboard if it is not present."""
-        dashboard_dict = json.loads(dashboard)
+        dashboard = json.loads(dashboard)
 
-        if not dashboard_dict.get("uid", None) and "dashboard_alt_uid" in template:
-            dashboard_dict["uid"] = template["dashboard_alt_uid"]
+        if not dashboard.get("uid", None) and "dashboard_alt_uid" in template:
+            dashboard["uid"] = template["dashboard_alt_uid"]
 
-        return json.dumps(dashboard_dict)
+        return json.dumps(dashboard)
 
     def _remove_all_dashboards_for_relation(self, relation: Relation) -> None:
         """If an errored dashboard is in stored data, remove it and trigger a deletion."""
@@ -1525,7 +1496,7 @@ class GrafanaDashboardConsumer(Object):
             stored_dashboards = self.get_peer_data("dashboards")
             stored_dashboards.pop(str(relation.id))
             self.set_peer_data("dashboards", stored_dashboards)
-            self.on.dashboards_changed.emit()  # pyright: ignore
+            self.on.dashboards_changed.emit()
 
     def _to_external_object(self, relation_id, dashboard):
         return {
@@ -1579,8 +1550,9 @@ class GrafanaDashboardAggregator(Object):
     The :class:`GrafanaDashboardAggregator` object provides a way to
     collate and aggregate Grafana dashboards from reactive/machine charms
     and transport them into Charmed Operators, using Juju topology.
+
     For detailed usage instructions, see the documentation for
-    :module:`cos-proxy-operator`, as this class is intended for use as a
+    :module:`lma-proxy-operator`, as this class is intended for use as a
     single point of intersection rather than use in individual charms.
 
     Since :class:`GrafanaDashboardAggregator` serves as a bridge between
@@ -1592,6 +1564,7 @@ class GrafanaDashboardAggregator(Object):
 
     In its most streamlined usage, :class:`GrafanaDashboardAggregator` is
     integrated in a charmed operator as follows:
+
         self.grafana = GrafanaDashboardAggregator(self)
 
     Args:
@@ -1607,7 +1580,7 @@ class GrafanaDashboardAggregator(Object):
     """
 
     _stored = StoredState()
-    on = GrafanaProviderEvents()  # pyright: ignore
+    on = GrafanaProviderEvents()
 
     def __init__(
         self,
@@ -1619,7 +1592,7 @@ class GrafanaDashboardAggregator(Object):
 
         # Reactive charms may be RPC-ish and not leave reliable data around. Keep
         # StoredState here
-        self._stored.set_default(  # type: ignore
+        self._stored.set_default(
             dashboard_templates={},
             id_mappings={},
         )
@@ -1661,48 +1634,42 @@ class GrafanaDashboardAggregator(Object):
             return
 
         for id in dashboards:
-            self._stored.dashboard_templates[id] = self._content_to_dashboard_object(  # type: ignore
+            self._stored.dashboard_templates[id] = self._content_to_dashboard_object(
                 dashboards[id], event
             )
 
-        self._stored.id_mappings[event.app.name] = dashboards  # type: ignore
+        self._stored.id_mappings[event.app.name] = dashboards
         self._update_remote_grafana(event)
 
     def _update_remote_grafana(self, _: Optional[RelationEvent] = None) -> None:
         """Push dashboards to the downstream Grafana relation."""
         # It's still ridiculous to add a UUID here, but needed
         stored_data = {
-            "templates": _type_convert_stored(self._stored.dashboard_templates),  # pyright: ignore
+            "templates": _type_convert_stored(self._stored.dashboard_templates),
             "uuid": str(uuid.uuid4()),
         }
 
-        if self._charm.unit.is_leader():
-            for grafana_relation in self.model.relations[self._grafana_relation]:
-                grafana_relation.data[self._charm.app]["dashboards"] = json.dumps(stored_data)
+        for grafana_relation in self.model.relations[self._grafana_relation]:
+            grafana_relation.data[self._charm.app]["dashboards"] = json.dumps(stored_data)
 
     def remove_dashboards(self, event: RelationBrokenEvent) -> None:
         """Remove a dashboard if the relation is broken."""
-        app_ids = _type_convert_stored(self._stored.id_mappings.get(event.app.name, ""))  # type: ignore
+        app_ids = _type_convert_stored(self._stored.id_mappings[event.app.name])
 
-        if not app_ids:
-            logger.info("Could not look up stored dashboards for %s", event.app.name)  # type: ignore
-            return
-
-        del self._stored.id_mappings[event.app.name]  # type: ignore
+        del self._stored.id_mappings[event.app.name]
         for id in app_ids:
-            del self._stored.dashboard_templates[id]  # type: ignore
+            del self._stored.dashboard_templates[id]
 
         stored_data = {
-            "templates": _type_convert_stored(self._stored.dashboard_templates),  # pyright: ignore
+            "templates": _type_convert_stored(self._stored.dashboard_templates),
             "uuid": str(uuid.uuid4()),
         }
 
-        if self._charm.unit.is_leader():
-            for grafana_relation in self.model.relations[self._grafana_relation]:
-                grafana_relation.data[self._charm.app]["dashboards"] = json.dumps(stored_data)
+        for grafana_relation in self.model.relations[self._grafana_relation]:
+            grafana_relation.data[self._charm.app]["dashboards"] = json.dumps(stored_data)
 
     # Yes, this has a fair amount of branching. It's not that complex, though
-    def _strip_existing_datasources(self, dash: dict) -> dict:  # noqa: C901
+    def _strip_existing_datasources(self, template: dict) -> dict:  # noqa: C901
         """Remove existing reactive charm datasource templating out.
 
         This method iterates through *known* places where reactive charms may set
@@ -1711,7 +1678,7 @@ class GrafanaDashboardAggregator(Object):
         `dashboard["__inputs"]` is a property sometimes set when exporting dashboards from
         the Grafana UI. It is not present in earlier Grafana versions, and can be disabled
         in 5.3.4 and above (optionally). If set, any values present will be substituted on
-        import. Some reactive charms use this for Prometheus. COS uses dropdown selectors
+        import. Some reactive charms use this for Prometheus. LMA2 uses dropdown selectors
         for datasources, and leaving this present results in "default" datasource values
         which are broken.
 
@@ -1721,110 +1688,78 @@ class GrafanaDashboardAggregator(Object):
 
         Further properties may be discovered.
         """
+        dash = template["dashboard"]
         try:
             if "list" in dash["templating"]:
                 for i in range(len(dash["templating"]["list"])):
                     if (
                         "datasource" in dash["templating"]["list"][i]
-                        and dash["templating"]["list"][i]["datasource"] is not None
+                        and "Juju" in dash["templating"]["list"][i]["datasource"]
                     ):
-                        if "Juju" in dash["templating"]["list"][i].get("datasource", ""):
-                            dash["templating"]["list"][i]["datasource"] = r"${prometheusds}"
-
-                # Strip out newly-added 'juju_application' template variables which
-                # don't line up with our drop-downs
-                dash_mutable = dash
-                for i in range(len(dash["templating"]["list"])):
+                        dash["templating"]["list"][i]["datasource"] = r"${prometheusds}"
                     if (
                         "name" in dash["templating"]["list"][i]
-                        and dash["templating"]["list"][i].get("name", "") == "app"
+                        and dash["templating"]["list"][i]["name"] == "host"
                     ):
-                        del dash_mutable["templating"]["list"][i]
-
-                if dash_mutable:
-                    dash = dash_mutable
+                        dash["templating"]["list"][i] = REACTIVE_CONVERTER
         except KeyError:
             logger.debug("No existing templating data in dashboard")
 
         if "__inputs" in dash:
             inputs = dash
             for i in range(len(dash["__inputs"])):
-                if dash["__inputs"][i].get("pluginName", "") == "Prometheus":
+                if dash["__inputs"][i]["pluginName"] == "Prometheus":
                     del inputs["__inputs"][i]
             if inputs:
                 dash["__inputs"] = inputs["__inputs"]
             else:
                 del dash["__inputs"]
 
-        return dash
+        template["dashboard"] = dash
+        return template
 
     def _handle_reactive_dashboards(self, event: RelationEvent) -> Optional[Dict]:
         """Look for a dashboard in relation data (during a reactive hook) or builtin by name."""
-        if not self._charm.unit.is_leader():
-            return {}
-
         templates = []
         id = ""
 
         # Reactive data can reliably be pulled out of events. In theory, if we got an event,
         # it's on the bucket, but using event explicitly keeps the mental model in
         # place for reactive
-        for k in event.relation.data[event.unit].keys():  # type: ignore
+        for k in event.relation.data[event.unit].keys():
             if k.startswith("request_"):
-                templates.append(json.loads(event.relation.data[event.unit][k])["dashboard"])  # type: ignore
+                templates.append(json.loads(event.relation.data[event.unit][k])["dashboard"])
 
-        for k in event.relation.data[event.app].keys():  # type: ignore
+        for k in event.relation.data[event.app].keys():
             if k.startswith("request_"):
-                templates.append(json.loads(event.relation.data[event.app][k])["dashboard"])  # type: ignore
+                templates.append(json.loads(event.relation.data[event.app][k])["dashboard"])
 
         builtins = self._maybe_get_builtin_dashboards(event)
 
         if not templates and not builtins:
-            logger.warning("NOTHING!")
             return {}
 
         dashboards = {}
         for t in templates:
+            # Replace values with LMA-style templating
+            t = self._strip_existing_datasources(t)
+
             # This seems ridiculous, too, but to get it from a "dashboards" key in serialized JSON
             # in the bucket back out to the actual "dashboard" we _need_, this is the way
             # This is not a mistake -- there's a double nesting in reactive charms, and
             # Grafana won't load it. We have to unbox:
             # event.relation.data[event.<type>]["request_*"]["dashboard"]["dashboard"],
             # and the final unboxing is below.
-            #
-            # Apparently SOME newer dashboards (such as Ceph) do not have this double nesting, so
-            # now we get to account for both :toot:
-            dash = t.get("dashboard", {}) or t
-
-            # Replace values with LMA-style templating
-            dash = self._strip_existing_datasources(dash)
-            dash = json.dumps(dash)
+            dash = json.dumps(t["dashboard"])
 
             # Replace the old-style datasource templates
             dash = re.sub(r"<< datasource >>", r"${prometheusds}", dash)
             dash = re.sub(r'"datasource": "prom.*?"', r'"datasource": "${prometheusds}"', dash)
-            dash = re.sub(
-                r'"datasource": "\$datasource"', r'"datasource": "${prometheusds}"', dash
-            )
-            dash = re.sub(r'"uid": "\$datasource"', r'"uid": "${prometheusds}"', dash)
-            dash = re.sub(
-                r'"datasource": "(!?\w)[\w|\s|-]+?Juju generated.*?"',
-                r'"datasource": "${prometheusds}"',
-                dash,
-            )
 
-            # Yank out "new"+old LMA topology
-            dash = re.sub(
-                r'(,?\s?juju_application=~)\\"\$app\\"', r'\1\\"$juju_application\\"', dash
-            )
-
-            # Replace old piechart panels
-            dash = re.sub(r'"type": "grafana-piechart-panel"', '"type": "piechart"', dash)
-
-            from jinja2 import DebugUndefined, Template
+            from jinja2 import Template
 
             content = _encode_dashboard_content(
-                Template(dash, undefined=DebugUndefined).render(datasource=r"${prometheusds}")  # type: ignore
+                Template(dash).render(host=event.unit.name, datasource="prometheus")
             )
             id = "prog:{}".format(content[-24:-16])
 
@@ -1855,12 +1790,12 @@ class GrafanaDashboardAggregator(Object):
 
         if dashboards_path:
 
-            def is_dashboard(p: Path) -> bool:
+            def _is_dashboard(p: Path) -> bool:
                 return p.is_file() and p.name.endswith((".json", ".json.tmpl", ".tmpl"))
 
-            for path in filter(is_dashboard, Path(dashboards_path).glob("*")):
+            for path in filter(_is_dashboard, Path(dashboards_path).glob("*")):
                 # path = Path(path)
-                if event.app.name in path.name:  # type: ignore
+                if event.app.name in path.name:
                     id = "file:{}".format(path.stem)
                     builtins[id] = self._content_to_dashboard_object(
                         _encode_dashboard_content(path.read_bytes()), event
@@ -1870,7 +1805,7 @@ class GrafanaDashboardAggregator(Object):
 
     def _content_to_dashboard_object(self, content: str, event: RelationEvent) -> Dict:
         return {
-            "charm": event.app.name,  # type: ignore
+            "charm": event.app.name,
             "content": content,
             "juju_topology": self._juju_topology(event),
             "inject_dropdowns": True,
@@ -1883,8 +1818,8 @@ class GrafanaDashboardAggregator(Object):
         return {
             "model": self._charm.model.name,
             "model_uuid": self._charm.model.uuid,
-            "application": event.app.name,  # type: ignore
-            "unit": event.unit.name,  # type: ignore
+            "application": event.app.name,
+            "unit": event.unit.name,
         }
 
 
@@ -1988,7 +1923,7 @@ class CosTool:
         args.extend(["--", "{}".format(expression)])
         # noinspection PyBroadException
         try:
-            return re.sub(r'="\$juju', r'=~"$juju', self._exec(args))
+            return self._exec(args)
         except subprocess.CalledProcessError as e:
             logger.debug('Applying the expression failed: "%s", falling back to the original', e)
             return expression

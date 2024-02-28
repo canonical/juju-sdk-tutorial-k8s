@@ -18,20 +18,9 @@ def harness():
     harness.cleanup()
 
 
-@pytest.fixture(autouse=True)
-def _patched_postgres_relation_data(monkeypatch):
-    def mock_return(*_):
-        return {}
-
-    monkeypatch.setattr(FastAPIDemoCharm, "fetch_postgres_relation_data", mock_return)
-
-
-@pytest.fixture(autouse=True)
-def _patched_version(monkeypatch):
+def test_pebble_layer(monkeypatch, harness: ops.testing.Harness[FastAPIDemoCharm]):
     monkeypatch.setattr(FastAPIDemoCharm, "version", "1.0.0")
-
-
-def test_pebble_layer(harness: ops.testing.Harness[FastAPIDemoCharm]):
+    monkeypatch.setattr(FastAPIDemoCharm, "fetch_postgres_relation_data", lambda *_: {})
     # Expected plan after Pebble ready with default config
     expected_plan = {
         "services": {

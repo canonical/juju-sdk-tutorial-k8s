@@ -5,35 +5,29 @@
 # Learn more at: https://juju.is/docs/sdk
 import logging
 
+import ops
 import requests
-from ops.charm import CharmBase
-from ops.main import main
-from ops.model import ActiveStatus
-from ops.model import BlockedStatus
-from ops.model import MaintenanceStatus
-from ops.model import WaitingStatus
-from ops.pebble import Layer
 
 # Log messages can be retrieved using juju debug-log
 logger = logging.getLogger(__name__)
 
 
-class FastAPIDemoCharm(CharmBase):
+class FastAPIDemoCharm(ops.CharmBase):
     """Charm the service."""
 
-    def __init__(self, *args):
-        super().__init__(*args)
+    def __init__(self, framework):
+        super().__init__(framework)
         self.pebble_service_name = "fastapi-service"
         self.container = self.unit.get_container("demo-server")  # see 'containers' in metadata.yaml
-        self.framework.observe(self.on.demo_server_pebble_ready, self._update_layer_and_restart)
-        self.framework.observe(self.on.config_changed, self._on_config_changed)
+        framework.observe(self.on.demo_server_pebble_ready, self._update_layer_and_restart)
+        framework.observe(self.on.config_changed, self._on_config_changed)
 
     def _on_config_changed(self, event):
         port = self.config["server-port"]  # see config.yaml
         logger.debug("New application port is requested: %s", port)
 
         if int(port) == 22:
-            self.unit.status = BlockedStatus("Invalid port number, 22 is reserved for SSH")
+            self.unit.status = ops.BlockedStatus("Invalid port number, 22 is reserved for SSH")
             return
 
         self._update_layer_and_restart(None)
@@ -50,9 +44,9 @@ class FastAPIDemoCharm(CharmBase):
 
         # Learn more about statuses in the SDK docs:
         # https://juju.is/docs/sdk/constructs#heading--statuses
-        self.unit.status = MaintenanceStatus("Assembling pod spec")
-        if self.container.can_connect():
-            new_layer = self._pebble_layer.to_dict()
+        self.unit.status = ops.MaintenanceStatus("Assembling Pebble layers")
+        new_layer = self._pebble_layer.to_dict()
+        try:
             # Get the current pebble layer config
             services = self.container.get_plan().to_dict().get("services", {})
             if services != new_layer["services"]:
@@ -62,12 +56,12 @@ class FastAPIDemoCharm(CharmBase):
 
                 self.container.restart(self.pebble_service_name)
                 logger.info(f"Restarted '{self.pebble_service_name}' service")
-
-            # add workload version in juju status
-            self.unit.set_workload_version(self.version)
-            self.unit.status = ActiveStatus()
-        else:
-            self.unit.status = WaitingStatus("Waiting for Pebble in workload container")
+        except ops.pebble.APIError:
+            self.unit.status = ops.MaintenanceStatus("Waiting for Pebble in workload container")
+            return
+        # Add workload version in Juju status.
+        self.unit.set_workload_version(self.version)
+        self.unit.status = ops.ActiveStatus()
 
     @property
     def _pebble_layer(self):
@@ -92,19 +86,18 @@ class FastAPIDemoCharm(CharmBase):
                 }
             },
         }
-        return Layer(pebble_layer)
+        return ops.pebble.Layer(pebble_layer)
 
     @property
     def version(self) -> str:
         """Reports the current workload (FastAPI app) version."""
-        if self.container.can_connect() and self.container.get_services(self.pebble_service_name):
-            try:
+        try:
+            if self.container.get_services(self.pebble_service_name):
                 return self._request_version()
-            # Catching Exception is not ideal, but we don't care much for the error here, and just
-            # default to setting a blank version since there isn't much the admin can do!
-            except Exception as e:
-                logger.warning("unable to get version from API: %s", str(e))
-                logger.exception(e)
+        # Catching Exception is not ideal, but we don't care much for the error here, and just
+        # default to setting a blank version since there isn't much the admin can do!
+        except Exception as e:
+            logger.warning("unable to get version from API: %s", str(e), exc_info=True)
         return ""
 
     def _request_version(self) -> str:
@@ -114,4 +107,4 @@ class FastAPIDemoCharm(CharmBase):
 
 
 if __name__ == "__main__":  # pragma: nocover
-    main(FastAPIDemoCharm)
+    ops.main(FastAPIDemoCharm)

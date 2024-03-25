@@ -9,3 +9,57 @@ bases:
     run-on:
     - name: ubuntu
       channel: "22.04"
+
+# This file populates the Overview on Charmhub.
+# See https://juju.is/docs/sdk/metadata-reference for a checklist and guidance.
+
+# The charm package name, no spaces (required)
+# See https://juju.is/docs/sdk/naming#heading--naming-charms for guidance.
+name: demo-api-charm
+title: |
+  demo-fastapi-k8s
+description: |
+  This is a demo charm built on top of a small Python FastAPI server.
+  This charm could be related to PostgreSQL charm and COS Lite bundle (Canonical Observability Stack).
+summary: |
+  FastAPI Demo charm for Kubernetes
+
+# This section defines charm config options, and populates the Configure tab on Charmhub.
+# If your charm does not require configuration options, delete this section entirely.
+#
+# See https://juju.is/docs/config for guidance.
+config:
+  options:
+    server-port:
+      default: 8000
+      description: Default port on which FastAPI is available
+      type: int
+
+assumes:
+  - juju >= 3.1
+  - k8s-api
+
+requires:
+  database:
+    interface: postgresql_client
+    limit: 1
+
+# The containers and resources metadata apply to Kubernetes charms only.
+# Remove them if not required.
+
+# Your workload’s containers.
+containers:
+  demo-server:
+    resource: demo-server-image
+
+# This field populates the Resources tab on Charmhub.
+resources:
+  # An OCI image resource for each container listed above.
+  # You may remove this if your charm will run without a workload sidecar container.
+  demo-server-image:
+    type: oci-image
+    description: OCI image from GitHub Container Repository
+    # The upstream-source field is ignored by Juju. It is included here as a reference
+    # so the integration testing suite knows which image to deploy during testing. This field
+    # is also used by the 'canonical/charming-actions' GitHub action for automated releasing.
+    upstream-source: ghcr.io/canonical/api_demo_server:1.0.1

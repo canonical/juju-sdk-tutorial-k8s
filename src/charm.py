@@ -7,16 +7,10 @@ import json
 import logging
 from typing import Any
 
+import ops
 import requests
 from charms.data_platform_libs.v0.data_interfaces import DatabaseCreatedEvent
 from charms.data_platform_libs.v0.data_interfaces import DatabaseRequires
-from ops.charm import CharmBase
-from ops.main import main
-from ops.model import ActiveStatus
-from ops.model import BlockedStatus
-from ops.model import MaintenanceStatus
-from ops.model import WaitingStatus
-from ops.pebble import Layer
 
 # Log messages can be retrieved using juju debug-log
 logger = logging.getLogger(__name__)
@@ -24,31 +18,52 @@ logger = logging.getLogger(__name__)
 PEER_NAME = "fastapi-peer"
 
 
-class FastAPIDemoCharm(CharmBase):
+class FastAPIDemoCharm(ops.CharmBase):
     """Charm the service."""
 
-    def __init__(self, *args):
-        super().__init__(*args)
+    def __init__(self, framework):
+        super().__init__(framework)
         self.pebble_service_name = "fastapi-service"
-        self.container = self.unit.get_container("demo-server")  # see 'containers' in metadata.yaml
+        self.container = self.unit.get_container(
+            "demo-server"
+        )  # see 'containers' in charmcraft.yaml
 
         # Charm events defined in the database requires charm library.
         self.database = DatabaseRequires(self, relation_name="database", database_name="names_db")
-        self.framework.observe(self.database.on.database_created, self._on_database_created)
-        self.framework.observe(self.database.on.endpoints_changed, self._on_database_created)
-        self.framework.observe(self.on.database_relation_broken, self._on_database_relation_removed)
+        framework.observe(self.database.on.database_created, self._on_database_created)
+        framework.observe(self.database.on.endpoints_changed, self._on_database_created)
 
-        self.framework.observe(self.on.demo_server_pebble_ready, self._update_layer_and_restart)
-        self.framework.observe(self.on.config_changed, self._on_config_changed)
+        framework.observe(self.on.demo_server_pebble_ready, self._update_layer_and_restart)
+        framework.observe(self.on.config_changed, self._on_config_changed)
+        framework.observe(self.on.collect_unit_status, self._on_collect_status)
+        framework.observe(self.on.start, self._count)
 
-        self.framework.observe(self.on.start, self._count)
+    def _on_collect_status(self, event):
+        port = self.config["server-port"]
+        if port == 22:
+            event.add_status(ops.BlockedStatus("Invalid port number, 22 is reserved for SSH"))
+        if not self.model.get_relation("database"):
+            # We need the user to do 'juju integrate'.
+            event.add_status(ops.BlockedStatus("Waiting for database relation"))
+        elif not self.database.fetch_relation_data():
+            # We need the charms to finish integrating.
+            event.add_status(ops.WaitingStatus("Waiting for database relation"))
+        try:
+            status = self.container.get_service(self.pebble_service_name)
+        except (ops.pebble.APIError, ops.ModelError):
+            event.add_status(ops.MaintenanceStatus("Waiting for Pebble in workload container"))
+        else:
+            if not status.is_running():
+                event.add_status(ops.MaintenanceStatus("Waiting for the service to start up"))
+        # If nothing is wrong, then the status is active.
+        event.add_status(ops.ActiveStatus())
 
     def _on_config_changed(self, event):
-        port = self.config["server-port"]  # see config.yaml
+        port = self.config["server-port"]  # see charmcraft.yaml
         logger.debug("New application port is requested: %s", port)
 
-        if int(port) == 22:
-            self.unit.status = BlockedStatus("Invalid port number, 22 is reserved for SSH")
+        if port == 22:
+            logger.info("Invalid port number, 22 is reserved for SSH")
             return
 
         self._update_layer_and_restart(None)
@@ -67,11 +82,6 @@ class FastAPIDemoCharm(CharmBase):
         """Event is fired when postgres database is created."""
         self._update_layer_and_restart(None)
 
-    def _on_database_relation_removed(self, event) -> None:
-        """Event is fired when relation with postgres is broken."""
-        self.unit.status = WaitingStatus("Waiting for database relation")
-        raise SystemExit(0)
-
     def _update_layer_and_restart(self, event) -> None:
         """Define and start a workload using the Pebble API.
 
@@ -84,9 +94,9 @@ class FastAPIDemoCharm(CharmBase):
 
         # Learn more about statuses in the SDK docs:
         # https://juju.is/docs/sdk/constructs#heading--statuses
-        self.unit.status = MaintenanceStatus("Assembling pod spec")
-        if self.container.can_connect():
-            new_layer = self._pebble_layer.to_dict()
+        self.unit.status = ops.MaintenanceStatus("Assembling Pebble layers")
+        new_layer = self._pebble_layer.to_dict()
+        try:
             # Get the current pebble layer config
             services = self.container.get_plan().to_dict().get("services", {})
             if services != new_layer["services"]:
@@ -96,12 +106,11 @@ class FastAPIDemoCharm(CharmBase):
 
                 self.container.restart(self.pebble_service_name)
                 logger.info(f"Restarted '{self.pebble_service_name}' service")
-
-            # add workload version in juju status
-            self.unit.set_workload_version(self.version)
-            self.unit.status = ActiveStatus()
-        else:
-            self.unit.status = WaitingStatus("Waiting for Pebble in workload container")
+        except ops.pebble.APIError as e:
+            logger.info("Unable to connect to Pebble: %s", e)
+            return
+        # Add workload version in Juju status.
+        self.unit.set_workload_version(self.version)
 
     @property
     def app_environment(self):
@@ -112,6 +121,8 @@ class FastAPIDemoCharm(CharmBase):
         The method returns this dictionary as output.
         """
         db_data = self.fetch_postgres_relation_data()
+        if not db_data:
+            return {}
         env = {
             "DEMO_SERVER_DB_HOST": db_data.get("db_host", None),
             "DEMO_SERVER_DB_PORT": db_data.get("db_port", None),
@@ -143,8 +154,7 @@ class FastAPIDemoCharm(CharmBase):
                 "db_password": data["password"],
             }
             return db_data
-        self.unit.status = WaitingStatus("Waiting for database relation")
-        raise SystemExit(0)
+        return {}
 
     @property
     def _pebble_layer(self):
@@ -170,19 +180,18 @@ class FastAPIDemoCharm(CharmBase):
                 }
             },
         }
-        return Layer(pebble_layer)
+        return ops.pebble.Layer(pebble_layer)
 
     @property
     def version(self) -> str:
         """Reports the current workload (FastAPI app) version."""
-        if self.container.can_connect() and self.container.get_services(self.pebble_service_name):
-            try:
+        try:
+            if self.container.get_services(self.pebble_service_name):
                 return self._request_version()
-            # Catching Exception is not ideal, but we don't care much for the error here, and just
-            # default to setting a blank version since there isn't much the admin can do!
-            except Exception as e:
-                logger.warning("unable to get version from API: %s", str(e))
-                logger.exception(e)
+        # Catching Exception is not ideal, but we don't care much for the error here, and just
+        # default to setting a blank version since there isn't much the admin can do!
+        except Exception as e:
+            logger.warning("unable to get version from API: %s", str(e), exc_info=True)
         return ""
 
     def _request_version(self) -> str:
@@ -208,4 +217,4 @@ class FastAPIDemoCharm(CharmBase):
 
 
 if __name__ == "__main__":  # pragma: nocover
-    main(FastAPIDemoCharm)
+    ops.main(FastAPIDemoCharm)

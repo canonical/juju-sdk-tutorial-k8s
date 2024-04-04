@@ -7,20 +7,13 @@ import json
 import logging
 from typing import Any
 
+import ops
 import requests
 from charms.data_platform_libs.v0.data_interfaces import DatabaseCreatedEvent
 from charms.data_platform_libs.v0.data_interfaces import DatabaseRequires
 from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
 from charms.loki_k8s.v0.loki_push_api import LogProxyConsumer
 from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
-from ops.charm import CharmBase
-from ops.main import main
-from ops.model import ActiveStatus
-from ops.model import BlockedStatus
-from ops.model import MaintenanceStatus
-from ops.model import WaitingStatus
-from ops.pebble import ConnectionError
-from ops.pebble import Layer
 
 # Log messages can be retrieved using juju debug-log
 logger = logging.getLogger(__name__)
@@ -28,13 +21,15 @@ logger = logging.getLogger(__name__)
 PEER_NAME = "fastapi-peer"
 
 
-class FastAPIDemoCharm(CharmBase):
+class FastAPIDemoCharm(ops.CharmBase):
     """Charm the service."""
 
-    def __init__(self, *args):
-        super().__init__(*args)
+    def __init__(self, framework):
+        super().__init__(framework)
         self.pebble_service_name = "fastapi-service"
-        self.container = self.unit.get_container("demo-server")  # see 'containers' in metadata.yaml
+        self.container = self.unit.get_container(
+            "demo-server"
+        )  # see 'containers' in charmcraft.yaml
 
         # Provide ability for prometheus to be scraped by Prometheus using prometheus_scrape
         self._prometheus_scraping = MetricsEndpointProvider(
@@ -54,24 +49,44 @@ class FastAPIDemoCharm(CharmBase):
 
         # Charm events defined in the database requires charm library.
         self.database = DatabaseRequires(self, relation_name="database", database_name="names_db")
-        self.framework.observe(self.database.on.database_created, self._on_database_created)
-        self.framework.observe(self.database.on.endpoints_changed, self._on_database_created)
-        self.framework.observe(self.on.database_relation_broken, self._on_database_relation_removed)
+        framework.observe(self.database.on.database_created, self._on_database_created)
+        framework.observe(self.database.on.endpoints_changed, self._on_database_created)
 
-        self.framework.observe(self.on.demo_server_pebble_ready, self._update_layer_and_restart)
-        self.framework.observe(self.on.config_changed, self._on_config_changed)
+        framework.observe(self.on.demo_server_pebble_ready, self._update_layer_and_restart)
+        framework.observe(self.on.config_changed, self._on_config_changed)
+        framework.observe(self.on.collect_unit_status, self._on_collect_status)
+        framework.observe(self.on.start, self._count)
 
-        self.framework.observe(self.on.start, self._count)
+        # Events on custom actions that are run via 'juju run-action'
+        framework.observe(self.on.get_db_info_action, self._on_get_db_info_action)
 
-        # events on custom actions that are run via 'juju run-action'
-        self.framework.observe(self.on.get_db_info_action, self._on_get_db_info_action)
+    def _on_collect_status(self, event):
+        port = self.config["server-port"]
+        if port == 22:
+            event.add_status(ops.BlockedStatus("Invalid port number, 22 is reserved for SSH"))
+        if not self.model.get_relation("database"):
+            # We need the user to do 'juju integrate'.
+            event.add_status(ops.BlockedStatus("Waiting for database relation"))
+        elif not self.database.fetch_relation_data():
+            # We need the charms to finish integrating.
+            event.add_status(ops.WaitingStatus("Waiting for database relation"))
+        try:
+            status = self.container.get_service(self.pebble_service_name)
+        except (ops.pebble.APIError, ops.pebble.ConnectionError, ops.ModelError):
+            event.add_status(ops.MaintenanceStatus("Waiting for Pebble in workload container"))
+        else:
+            if not status.is_running():
+                event.add_status(ops.MaintenanceStatus("Waiting for the service to start up"))
+        # If nothing is wrong, then the status is active.
+        event.add_status(ops.ActiveStatus())
 
     def _on_config_changed(self, event):
-        port = self.config["server-port"]  # see config.yaml
+        port = self.config["server-port"]  # see charmcraft.yaml
         logger.debug("New application port is requested: %s", port)
 
-        if int(port) == 22:
-            self.unit.status = BlockedStatus("Invalid port number, 22 is reserved for SSH")
+        if port == 22:
+            # In collect-status, the status will be set to blocked.
+            logger.info("Invalid port number, 22 is reserved for SSH")
             return
 
         self._update_layer_and_restart(None)
@@ -90,11 +105,6 @@ class FastAPIDemoCharm(CharmBase):
         """Event is fired when postgres database is created."""
         self._update_layer_and_restart(None)
 
-    def _on_database_relation_removed(self, event) -> None:
-        """Event is fired when relation with postgres is broken."""
-        self.unit.status = WaitingStatus("Waiting for database relation")
-        raise SystemExit(0)
-
     def _on_get_db_info_action(self, event) -> None:
         """This method is called when "get_db_info" action is called. It shows information about
         database access points by calling the `fetch_postgres_relation_data` method and creates
@@ -104,26 +114,23 @@ class FastAPIDemoCharm(CharmBase):
 
         Learn more about actions at https://juju.is/docs/sdk/actions
         """
-        show_password = event.params["show-password"]  # see actions.yaml
-        try:
-            db_data = self.fetch_postgres_relation_data()
-            output = {
-                "db-host": db_data.get("db_host", None),
-                "db-port": db_data.get("db_port", None),
-            }
-
-            if show_password:
-                output.update(
-                    {
-                        "db-username": db_data.get("db_username", None),
-                        "db-password": db_data.get("db_password", None),
-                    }
-                )
-        except SystemExit:
-            output = {"result": "No database connected"}
-            raise
-        finally:
-            event.set_results(output)
+        show_password = event.params["show-password"]  # see charmcraft.yaml
+        db_data = self.fetch_postgres_relation_data()
+        if not db_data:
+            event.fail("No database connected")
+            return
+        output = {
+            "db-host": db_data.get("db_host", None),
+            "db-port": db_data.get("db_port", None),
+        }
+        if show_password:
+            output.update(
+                {
+                    "db-username": db_data.get("db_username", None),
+                    "db-password": db_data.get("db_password", None),
+                }
+            )
+        event.set_results(output)
 
     def _update_layer_and_restart(self, event) -> None:
         """Define and start a workload using the Pebble API.
@@ -137,7 +144,7 @@ class FastAPIDemoCharm(CharmBase):
 
         # Learn more about statuses in the SDK docs:
         # https://juju.is/docs/sdk/constructs#heading--statuses
-        self.unit.status = MaintenanceStatus("Assembling pod spec")
+        self.unit.status = ops.MaintenanceStatus("Assembling Pebble layers")
         new_layer = self._pebble_layer.to_dict()
         try:
             # Get the current pebble layer config
@@ -149,12 +156,11 @@ class FastAPIDemoCharm(CharmBase):
 
                 self.container.restart(self.pebble_service_name)
                 logger.info(f"Restarted '{self.pebble_service_name}' service")
-
-            # add workload version in juju status
-            self.unit.set_workload_version(self.version)
-            self.unit.status = ActiveStatus()
-        except ConnectionError:
-            self.unit.status = WaitingStatus("Waiting for Pebble in workload container")
+        except (ops.pebble.APIError, ops.pebble.ConnectionError) as e:
+            logger.info("Unable to connect to Pebble: %s", e)
+            return
+        # Add workload version in Juju status.
+        self.unit.set_workload_version(self.version)
 
     @property
     def app_environment(self):
@@ -165,6 +171,8 @@ class FastAPIDemoCharm(CharmBase):
         The method returns this dictionary as output.
         """
         db_data = self.fetch_postgres_relation_data()
+        if not db_data:
+            return {}
         env = {
             "DEMO_SERVER_DB_HOST": db_data.get("db_host", None),
             "DEMO_SERVER_DB_PORT": db_data.get("db_port", None),
@@ -196,8 +204,7 @@ class FastAPIDemoCharm(CharmBase):
                 "db_password": data["password"],
             }
             return db_data
-        self.unit.status = WaitingStatus("Waiting for database relation")
-        raise SystemExit(0)
+        return {}
 
     @property
     def _pebble_layer(self):
@@ -223,7 +230,7 @@ class FastAPIDemoCharm(CharmBase):
                 }
             },
         }
-        return Layer(pebble_layer)
+        return ops.pebble.Layer(pebble_layer)
 
     @property
     def version(self) -> str:
@@ -231,13 +238,10 @@ class FastAPIDemoCharm(CharmBase):
         try:
             if self.container.get_services(self.pebble_service_name):
                 return self._request_version()
-        except ConnectionError:
-            pass
         # Catching Exception is not ideal, but we don't care much for the error here, and just
         # default to setting a blank version since there isn't much the admin can do!
         except Exception as e:
-            logger.warning("unable to get version from API: %s", str(e))
-            logger.exception(e)
+            logger.warning("unable to get version from API: %s", str(e), exc_info=True)
         return ""
 
     def _request_version(self) -> str:
@@ -263,4 +267,4 @@ class FastAPIDemoCharm(CharmBase):
 
 
 if __name__ == "__main__":  # pragma: nocover
-    main(FastAPIDemoCharm)
+    ops.main(FastAPIDemoCharm)

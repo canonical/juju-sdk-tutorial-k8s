@@ -58,6 +58,7 @@ class FastAPIDemoCharm(ops.CharmBase):
         logger.debug("New application port is requested: %s", port)
 
         if port == 22:
+            # The collect-status handler will set the status to blocked.
             logger.info("Invalid port number, 22 is reserved for SSH")
             return
 

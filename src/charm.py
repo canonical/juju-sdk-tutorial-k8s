@@ -191,7 +191,7 @@ class FastAPIDemoCharm(ops.CharmBase):
         a dictionary. If no data is retrieved, the unit is set to waiting status and
         the program exits with a zero status code."""
         relations = self.database.fetch_relation_data()
-        logger.info("Got following database data: %s", relations)
+        logger.debug("Got following database data: %s", relations)
         for data in relations.values():
             if not data:
                 continue

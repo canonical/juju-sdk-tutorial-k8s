@@ -12,7 +12,7 @@ from pytest_operator.plugin import OpsTest
 
 logger = logging.getLogger(__name__)
 
-METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
+METADATA = yaml.safe_load(Path("./charmcraft.yaml").read_text())
 APP_NAME = METADATA["name"]
 
 
@@ -24,18 +24,14 @@ async def test_build_and_deploy(ops_test: OpsTest):
     """
     # Build and deploy charm from local source folder
     charm = await ops_test.build_charm(".")
-    resources = {
-        "demo-server-image": METADATA["resources"]["demo-server-image"][
-            "upstream-source"
-        ]
-    }
+    resources = {"demo-server-image": METADATA["resources"]["demo-server-image"]["upstream-source"]}
 
-    # Deploy the charm and wait for waiting/idle status
+    # Deploy the charm and wait for blocked/idle status
     # The app will not be in active status as this requires a database relation
     await asyncio.gather(
         ops_test.model.deploy(charm, resources=resources, application_name=APP_NAME),
         ops_test.model.wait_for_idle(
-            apps=[APP_NAME], status="waiting", raise_on_blocked=True, timeout=1000
+            apps=[APP_NAME], status="blocked", raise_on_blocked=False, timeout=120
         ),
     )
 
@@ -48,10 +44,10 @@ async def test_database_integration(ops_test: OpsTest):
     """
     await ops_test.model.deploy(
         application_name="postgresql-k8s",
-        entity_url="https://charmhub.io/postgresql-k8s",
+        entity_url="postgresql-k8s",
         channel="14/stable",
     )
     await ops_test.model.integrate(f"{APP_NAME}", "postgresql-k8s")
     await ops_test.model.wait_for_idle(
-        apps=[APP_NAME], status="active", raise_on_blocked=True, timeout=1000
+        apps=[APP_NAME], status="active", raise_on_blocked=False, timeout=120
     )

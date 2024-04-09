@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 import yaml
+from helpers import get_address
+from helpers import is_port_open
 from pytest_operator.plugin import OpsTest
 
 logger = logging.getLogger(__name__)
@@ -51,3 +53,27 @@ async def test_database_integration(ops_test: OpsTest):
     await ops_test.model.wait_for_idle(
         apps=[APP_NAME], status="active", raise_on_blocked=False, timeout=120
     )
+
+
+@pytest.mark.abort_on_fail
+async def test_open_ports(ops_test: OpsTest):
+    """Verify that setting the server-port in charm's config correctly adjust k8s service
+
+    Assert blocked status in case of port 22 and active status for others
+    """
+    app = ops_test.model.applications.get("demo-api-charm")
+
+    # Get the k8s service address of the app
+    address = await get_address(ops_test=ops_test, app_name=APP_NAME)
+    # Validate that initial port is opened
+    assert is_port_open(address, 8000)
+
+    # Set Port to 22 and validate app going to blocked status with port not opened
+    await app.set_config({"server-port": "22"})
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", timeout=120),
+    assert not is_port_open(address, 22)
+
+    # Set Port to 6789 "Dummy port" and validate app going to active status with port opened
+    await app.set_config({"server-port": "6789"})
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=120),
+    assert is_port_open(address, 6789)

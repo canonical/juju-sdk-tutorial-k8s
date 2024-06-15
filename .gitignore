@@ -9,5 +9,5 @@ __pycache__/
 .vscode/
 
 # for the helper script
-xtmp
+tmp
 diff.patch

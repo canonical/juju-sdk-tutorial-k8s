@@ -53,13 +53,15 @@ Usage examples:
 - forked repo owner: `IronCore864`
 - repo name: `juju-sdk-tutorial-k8s` (both upstream and forked)
 
-Get diff from PR No.1 in the upstream repo and merge the diff into later chapters, and when there is a conflict, stop:
+Get the diff from PR No.1 in the upstream repo and merge the diff into later chapters:
 
 ```bash
 $ tox -- -f IronCore864 -p 1
 ```
 
-To ignore conflicts and create all PRs for all following chapters:
+When there is a conflict in a chapter, that PR won't be created and the script exists, PRs for following chapters _won't_ be created.
+
+To ignore conflicts and create all PRs for all following chapters anyway, add the `-i` (`--ignore-conflicts`) flag:
 
 ```bash
 $ tox -- -f IronCore864 -p 1 -i
@@ -67,7 +69,7 @@ $ tox -- -f IronCore864 -p 1 -i
 
 ### Testing
 
-For testing purposes, you can create an org to use it as upstream, then fork it. Example:
+For testing purposes, create an org to use it as upstream, then fork it. Example:
 
 - upstream org: `IronCoreWorks`
 - forked repo owner: `IronCore864`

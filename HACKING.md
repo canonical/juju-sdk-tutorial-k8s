@@ -81,3 +81,11 @@ $ tox -- -u IronCoreWorks -f IronCore864 -ur juju-k8s-charm-tutorial -fr juju-k8
 # ignore conflicts and create all PRs for all following chapters
 $ tox -- -u IronCoreWorks -f IronCore864 -ur juju-k8s-charm-tutorial -fr juju-k8s-charm-tutorial -p 1 -i
 ```
+
+### Formatting
+
+```bash
+$ tox -e fmt
+```
+
+This formats the code and sorts the imports using [the Ruff formatter](https://docs.astral.sh/ruff/formatter/).

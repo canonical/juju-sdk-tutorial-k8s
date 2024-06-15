@@ -49,9 +49,9 @@ options:
 
 Usage examples:
 
-- upstream org: canonical
-- forked repo owner: IronCore864
-- repo name: juju-sdk-tutorial-k8s (both upstream and forked)
+- upstream org: `canonical`
+- forked repo owner: `IronCore864`
+- repo name: `juju-sdk-tutorial-k8s` (both upstream and forked)
 
 Get diff from PR No.1 in the upstream repo and merge the diff into later chapters, and when there is a conflict, stop:
 

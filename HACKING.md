@@ -1,8 +1,8 @@
 # Hacking
 
-## Helper Script
+## `make-prs.py`
 
-The `helper-script.py` script (only exists in the main branch) does the following:
+The `make-prs.py` script (only exists in the main branch) does the following:
 
 - Get the diff from a PR;
 - find out which chapter that PR is about;
@@ -22,29 +22,26 @@ The `helper-script.py` script (only exists in the main branch) does the followin
 ### Usage
 
 ```console
-usage: helper-script.py [-h] [-u UPSTREAM_OWNER] -f FORK_OWNER [-ur UPSTREAM_REPO_NAME]
-               [-fr FORK_REPO_NAME] -p PULL_REQUEST_NUMBER [-i]
+usage: make-prs.py [-h] [-u UPSTREAM_OWNER] -f FORK_OWNER [-ur UPSTREAM_REPO_NAME]
+                   [-fr FORK_REPO_NAME] -p PULL_REQUEST_NUMBER [-i]
 
 options:
   -h, --help            show this help message and exit
   -u UPSTREAM_OWNER, --upstream-owner UPSTREAM_OWNER
-                        The upstream owner of the repository, defaults to
-                        `canonical`.
+                        The upstream owner of the repository, defaults to `canonical`.
   -f FORK_OWNER, --fork-owner FORK_OWNER
-                        The forked repo's owner, mandatory. Normally, it should be
-                        your own GitHub user name.
+                        The forked repo's owner, mandatory. Normally, it should be your own
+                        GitHub user name.
   -ur UPSTREAM_REPO_NAME, --upstream-repo-name UPSTREAM_REPO_NAME
-                        The repository name in the upstream, defaults to `juju-sdk-
-                        tutorial-k8s`.
+                        The repository name in the upstream, defaults to `juju-sdk-tutorial-k8s`.
   -fr FORK_REPO_NAME, --fork-repo-name FORK_REPO_NAME
-                        The repository name of the forked repo, defaults to `juju-
-                        sdk-tutorial-k8s`.
+                        The repository name of the forked repo, defaults to `juju-sdk-
+                        tutorial-k8s`.
   -p PULL_REQUEST_NUMBER, --pull-request-number PULL_REQUEST_NUMBER
-                        The PR number from which you want to merge the diff into
-                        other branches.
+                        The PR number from which you want to merge the diff into other branches.
   -i, --ignore-conflicts
-                        Still create the PR (and following PRs) when conflicts occur
-                        in the current branch.
+                        Still create the PR (and following PRs) when conflicts occur in the
+                        current branch.
 ```
 
 Usage examples:

@@ -6,8 +6,8 @@ import shutil
 import subprocess
 import typing
 
+import github
 import requests
-from github import Auth, Github
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -15,14 +15,14 @@ logging.basicConfig(level=logging.INFO)
 WORKING_DIR = "./tmp"
 DIFF_FILE = "./diff.patch"
 
-auth = Auth.Token(os.getenv("GITHUB_TOKEN"))
-g = Github(auth=auth)
+auth = github.Auth.Token(os.getenv("GITHUB_TOKEN"))
+gh_client = github.Github(auth=auth)
 
 
 def get_diff_as_patch(repo: str, pull_request_number: int):
     logger.info("Getting diff from PR ...")
 
-    pr_diff_url = g.get_repo(repo).get_pull(pull_request_number).diff_url
+    pr_diff_url = gh_client.get_repo(repo).get_pull(pull_request_number).diff_url
 
     res = requests.get(pr_diff_url)
     if res.status_code != requests.codes.ok:
@@ -112,7 +112,7 @@ def create_pr(repo: str, base: str, head: str, conflict: bool):
         title = f"{title} CONFLICTS!"
         body = f"**Conflicts! Need human intervention!**\n\n{body}"
 
-    repo = g.get_repo(repo)
+    repo = gh_client.get_repo(repo)
     pr = repo.create_pull(base=base, head=head, title=title, body=body)
     if not pr:
         logger.error("Error creating PR.")
@@ -122,12 +122,16 @@ def create_pr(repo: str, base: str, head: str, conflict: bool):
 
 def get_all_chapters_branches(repo: str) -> typing.List[str]:
     return sorted(
-        [b.name for b in g.get_repo(repo).get_branches() if re.search(r"\d", b.name)]
+        [
+            b.name
+            for b in gh_client.get_repo(repo).get_branches()
+            if re.search(r"\d", b.name)
+        ]
     )
 
 
 def get_pr_base_branch(repo: str, pull_request_number: int) -> str:
-    return g.get_repo(repo).get_pull(pull_request_number).base.ref
+    return gh_client.get_repo(repo).get_pull(pull_request_number).base.ref
 
 
 def apply_diff_to_branch_and_create_pr(

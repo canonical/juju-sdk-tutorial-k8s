@@ -8,6 +8,6 @@ __pycache__/
 .idea
 .vscode/
 
-# for the helper script
+# tmp dirs/files for the make-prs.py script
 tmp
 diff.patch

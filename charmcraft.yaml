@@ -10,6 +10,12 @@ bases:
     - name: ubuntu
       channel: "22.04"
 
+parts:
+  charm:
+    build-packages:
+      # Required for the cos-lite packages, which have a Rust dependency.
+      - cargo
+
 # This file populates the Overview on Charmhub.
 # See https://juju.is/docs/sdk/metadata-reference for a checklist and guidance.
 

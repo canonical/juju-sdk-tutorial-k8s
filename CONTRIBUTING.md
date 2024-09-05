@@ -69,13 +69,13 @@ For testing purposes, create an org to use it as upstream, then fork it. Example
 - forked repo owner: `IronCore864`
 - repo name: `juju-k8s-charm-tutorial` (both upstream and forked)
 
-When there is a conflict, stop:
+When there is a conflict in a chapter, don't create the PR and exist; PRs for following chapters _won't_ be created:
 
 ```bash
 tox -- -u IronCoreWorks -f IronCore864 -ur juju-k8s-charm-tutorial -fr juju-k8s-charm-tutorial -p 1
 ```
 
-Ignore conflicts and create all PRs for all following chapters:
+Ignore conflicts in the current chapter, create the PR for it and PRs for all the following chapters anyway:
 
 ```bash
 tox -- -u IronCoreWorks -f IronCore864 -ur juju-k8s-charm-tutorial -fr juju-k8s-charm-tutorial -p 1 -i

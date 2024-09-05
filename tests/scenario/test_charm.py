@@ -3,10 +3,11 @@
 # See LICENSE file for licensing details.
 #
 # Learn more at: https://juju.is/docs/sdk
-from charm import FastAPIDemoCharm
-from scenario import Relation, State, Context, Container, Action
-
 from unittest.mock import Mock
+
+import scenario
+
+from charm import FastAPIDemoCharm
 
 
 def test_get_db_info_action(monkeypatch):
@@ -15,8 +16,8 @@ def test_get_db_info_action(monkeypatch):
     monkeypatch.setattr("charm.MetricsEndpointProvider", Mock())
     monkeypatch.setattr("charm.GrafanaDashboardProvider", Mock())
 
-    # use scenario.Context to declare what charm we are testing
-    ctx = Context(
+    # Use scenario.Context to declare what charm we are testing.
+    ctx = scenario.Context(
         FastAPIDemoCharm,
         meta={
             "name": "demo-api-charm",
@@ -36,17 +37,15 @@ def test_get_db_info_action(monkeypatch):
             }
         },
         actions={
-            "get-db-info": {
-                "params": {"show-password": {"default": False, "type": "boolean"}}
-            }
+            "get-db-info": {"params": {"show-password": {"default": False, "type": "boolean"}}}
         },
     )
 
-    # declare the input state
-    state_in = State(
+    # Declare the input state.
+    state_in = scenario.State(
         leader=True,
         relations=[
-            Relation(
+            scenario.Relation(
                 endpoint="database",
                 interface="postgresql_client",
                 remote_app_name="postgresql-k8s",
@@ -59,12 +58,12 @@ def test_get_db_info_action(monkeypatch):
             ),
         ],
         containers=[
-            Container(name="demo-server", can_connect=True),
+            scenario.Container(name="demo-server", can_connect=True),
         ],
     )
 
     # run the action with the defined state and collect the output.
-    action = Action("get-db-info", {"show-password": True})
+    action = scenario.Action("get-db-info", {"show-password": True})
     action_out = ctx.run_action(action, state_in)
 
     assert action_out.results == {

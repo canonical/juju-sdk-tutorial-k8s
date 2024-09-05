@@ -45,7 +45,6 @@ def get_diff_as_patch(repo: str, pull_request_number: int):
 
     with open(DIFF_FILE, "w") as f:
         f.write(res.text)
-    exit(1)
 
 
 def clone(repo: str):

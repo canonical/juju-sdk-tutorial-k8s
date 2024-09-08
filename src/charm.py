@@ -14,18 +14,19 @@ logger = logging.getLogger(__name__)
 class FastAPIDemoCharm(ops.CharmBase):
     """Charm the service."""
 
-    def __init__(self, framework):
+    def __init__(self, framework: ops.Framework) -> None:
         super().__init__(framework)
         self.pebble_service_name = "fastapi-service"
-        framework.observe(self.on.demo_server_pebble_ready, self._on_demo_server_pebble_ready)
+        framework.observe(self.on["demo-server"].pebble_ready, self._on_demo_server_pebble_ready)
 
-    def _on_demo_server_pebble_ready(self, event):
+    def _on_demo_server_pebble_ready(self, event: ops.PebbleReadyEvent) -> None:
         """Define and start a workload using the Pebble API.
 
         Change this example to suit your needs. You'll need to specify the right entrypoint and
         environment configuration for your specific workload.
 
-        Learn more about interacting with Pebble at at https://juju.is/docs/sdk/pebble.
+        Learn more about interacting with Pebble at https://juju.is/docs/sdk/pebble
+        Learn more about Pebble layers at https://github.com/canonical/pebble
         """
         # Get a reference the container attribute on the PebbleReadyEvent
         container = event.workload
@@ -38,8 +39,8 @@ class FastAPIDemoCharm(ops.CharmBase):
         self.unit.status = ops.ActiveStatus()
 
     @property
-    def _pebble_layer(self):
-        """Return a dictionary representing a Pebble layer."""
+    def _pebble_layer(self) -> ops.pebble.Layer:
+        """Return a Layer object representing a Pebble layer."""
         command = " ".join(
             [
                 "uvicorn",
@@ -48,7 +49,7 @@ class FastAPIDemoCharm(ops.CharmBase):
                 "--port=8000",
             ]
         )
-        pebble_layer = {
+        pebble_layer: ops.pebble.LayerDict = {
             "summary": "FastAPI demo service",
             "description": "pebble config layer for FastAPI demo server",
             "services": {

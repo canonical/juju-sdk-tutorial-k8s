@@ -3,14 +3,14 @@
 # See LICENSE file for licensing details.
 #
 # Learn more at: https://juju.is/docs/sdk
-from unittest.mock import Mock
-
 import scenario
+from pytest import MonkeyPatch
+from unittest.mock import Mock
 
 from charm import FastAPIDemoCharm
 
 
-def test_get_db_info_action(monkeypatch):
+def test_get_db_info_action(monkeypatch: MonkeyPatch):
     monkeypatch.setattr("charm.LogProxyConsumer", Mock())
     monkeypatch.setattr("charm.MetricsEndpointProvider", Mock())
     monkeypatch.setattr("charm.GrafanaDashboardProvider", Mock())

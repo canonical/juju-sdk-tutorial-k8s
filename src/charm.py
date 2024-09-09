@@ -4,6 +4,7 @@
 #
 # Learn more at: https://juju.is/docs/sdk
 import logging
+from typing import Dict, Optional
 
 import ops
 import requests
@@ -17,23 +18,19 @@ logger = logging.getLogger(__name__)
 class FastAPIDemoCharm(ops.CharmBase):
     """Charm the service."""
 
-    def __init__(self, framework):
+    def __init__(self, framework: ops.Framework) -> None:
         super().__init__(framework)
         self.pebble_service_name = "fastapi-service"
-        self.container = self.unit.get_container(
-            "demo-server"
-        )  # see 'containers' in charmcraft.yaml
-
-        # Charm events defined in the database requires charm library.
+        self.container = self.unit.get_container("demo-server")  # see 'containers' in charmcraft.yaml
+        framework.observe(self.on["demo-server"].pebble_ready, self._on_demo_server_pebble_ready)
+        framework.observe(self.on.config_changed, self._on_config_changed)
+        framework.observe(self.on.collect_unit_status, self._on_collect_status)
+        # Charm events defined in the database requires charm library:
         self.database = DatabaseRequires(self, relation_name="database", database_name="names_db")
         framework.observe(self.database.on.database_created, self._on_database_created)
         framework.observe(self.database.on.endpoints_changed, self._on_database_created)
 
-        framework.observe(self.on.demo_server_pebble_ready, self._update_layer_and_restart)
-        framework.observe(self.on.config_changed, self._on_config_changed)
-        framework.observe(self.on.collect_unit_status, self._on_collect_status)
-
-    def _on_collect_status(self, event):
+    def _on_collect_status(self, event: ops.CollectStatusEvent) -> None:
         port = self.config["server-port"]
         if port == 22:
             event.add_status(ops.BlockedStatus("Invalid port number, 22 is reserved for SSH"))
@@ -53,7 +50,7 @@ class FastAPIDemoCharm(ops.CharmBase):
         # If nothing is wrong, then the status is active.
         event.add_status(ops.ActiveStatus())
 
-    def _on_config_changed(self, event):
+    def _on_config_changed(self, event: ops.ConfigChangedEvent) -> None:
         port = self.config["server-port"]  # see charmcraft.yaml
         logger.debug("New application port is requested: %s", port)
 
@@ -62,30 +59,33 @@ class FastAPIDemoCharm(ops.CharmBase):
             logger.info("Invalid port number, 22 is reserved for SSH")
             return
 
-        self._update_layer_and_restart(None)
+        self._update_layer_and_restart()
+
+    def _on_demo_server_pebble_ready(self, event: ops.PebbleReadyEvent) -> None:
+        self._update_layer_and_restart()
 
     def _on_database_created(self, event: DatabaseCreatedEvent) -> None:
         """Event is fired when postgres database is created."""
-        self._update_layer_and_restart(None)
+        self._update_layer_and_restart()
 
-    def _update_layer_and_restart(self, event) -> None:
+    def _update_layer_and_restart(self) -> None:
         """Define and start a workload using the Pebble API.
 
         You'll need to specify the right entrypoint and environment
         configuration for your specific workload. Tip: you can see the
         standard entrypoint of an existing container using docker inspect
 
+        Learn more about interacting with Pebble at https://juju.is/docs/sdk/pebble
         Learn more about Pebble layers at https://github.com/canonical/pebble
         """
 
         # Learn more about statuses in the SDK docs:
         # https://juju.is/docs/sdk/constructs#heading--statuses
         self.unit.status = ops.MaintenanceStatus("Assembling Pebble layers")
-        new_layer = self._pebble_layer.to_dict()
         try:
             # Get the current pebble layer config
             services = self.container.get_plan().to_dict().get("services", {})
-            if services != new_layer["services"]:
+            if services != self._pebble_layer.to_dict().get("services", {}):
                 # Changes were made, add the new layer
                 self.container.add_layer("fastapi_demo", self._pebble_layer, combine=True)
                 logger.info("Added updated layer 'fastapi_demo' to Pebble plan")
@@ -99,7 +99,7 @@ class FastAPIDemoCharm(ops.CharmBase):
         self.unit.set_workload_version(self.version)
 
     @property
-    def app_environment(self):
+    def app_environment(self) -> Dict[str, Optional[str]]:
         """This property method creates a dictionary containing environment variables
         for the application. It retrieves the database authentication data by calling
         the `fetch_postgres_relation_data` method and uses it to populate the dictionary.
@@ -117,7 +117,7 @@ class FastAPIDemoCharm(ops.CharmBase):
         }
         return env
 
-    def fetch_postgres_relation_data(self) -> dict:
+    def fetch_postgres_relation_data(self) -> Dict[str, str]:
         """Fetch postgres relation data.
 
         This function retrieves relation data from a postgres database using
@@ -143,8 +143,8 @@ class FastAPIDemoCharm(ops.CharmBase):
         return {}
 
     @property
-    def _pebble_layer(self):
-        """Return a dictionary representing a Pebble layer."""
+    def _pebble_layer(self) -> ops.pebble.Layer:
+        """Return a Layer object representing a Pebble layer."""
         command = " ".join(
             [
                 "uvicorn",
@@ -153,7 +153,7 @@ class FastAPIDemoCharm(ops.CharmBase):
                 f"--port={self.config['server-port']}",
             ]
         )
-        pebble_layer = {
+        pebble_layer: ops.pebble.LayerDict = {
             "summary": "FastAPI demo service",
             "description": "pebble config layer for FastAPI demo server",
             "services": {

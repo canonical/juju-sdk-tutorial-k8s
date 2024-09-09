@@ -73,7 +73,7 @@ def test_get_db_info_action(monkeypatch: MonkeyPatch):
     }
 
 
-def test_open_port(monkeypatch):
+def test_open_port(monkeypatch: MonkeyPatch):
     monkeypatch.setattr("charm.LogProxyConsumer", Mock())
     monkeypatch.setattr("charm.MetricsEndpointProvider", Mock())
     monkeypatch.setattr("charm.GrafanaDashboardProvider", Mock())

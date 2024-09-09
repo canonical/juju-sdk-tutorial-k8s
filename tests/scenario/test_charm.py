@@ -3,9 +3,10 @@
 # See LICENSE file for licensing details.
 #
 # Learn more at: https://juju.is/docs/sdk
+from unittest.mock import Mock
+
 import scenario
 from pytest import MonkeyPatch
-from unittest.mock import Mock
 
 from charm import FastAPIDemoCharm
 

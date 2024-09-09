@@ -5,7 +5,7 @@
 # Learn more at: https://juju.is/docs/sdk
 import json
 import logging
-from typing import Any, Dict, Optional
+from typing import Dict, List, Optional, Union, cast
 
 import ops
 import requests
@@ -17,6 +17,15 @@ logger = logging.getLogger(__name__)
 
 PEER_NAME = "fastapi-peer"
 
+JSONData = Union[
+    Dict[str, "JSONData"],
+    List["JSONData"],
+    str,
+    int,
+    float,
+    bool,
+    None,
+]
 
 class FastAPIDemoCharm(ops.CharmBase):
     """Charm the service."""
@@ -33,7 +42,6 @@ class FastAPIDemoCharm(ops.CharmBase):
         self.database = DatabaseRequires(self, relation_name="database", database_name="names_db")
         framework.observe(self.database.on.database_created, self._on_database_created)
         framework.observe(self.database.on.endpoints_changed, self._on_database_created)
-
 
     def _on_collect_status(self, event: ops.CollectStatusEvent) -> None:
         port = self.config["server-port"]
@@ -66,14 +74,14 @@ class FastAPIDemoCharm(ops.CharmBase):
 
         self._update_layer_and_restart()
 
-    def _count(self, event) -> None:
+    def _count(self, event: ops.StartEvent) -> None:
         """This function updates a counter for the number of times a K8s pod has been started.
 
         It retrieves the current count of pod starts from the 'unit_stats' peer relation data,
         increments the count, and then updates the 'unit_stats' data with the new count.
         """
         unit_stats = self.get_peer_data("unit_stats")
-        counter = unit_stats.get("started_counter", 0)
+        counter = cast(str, unit_stats.get("started_counter", "0"))
         self.set_peer_data("unit_stats", {"started_counter": int(counter) + 1})
 
     def _on_demo_server_pebble_ready(self, event: ops.PebbleReadyEvent) -> None:
@@ -201,20 +209,23 @@ class FastAPIDemoCharm(ops.CharmBase):
         return resp.json()["version"]
 
     @property
-    def peers(self):
+    def peers(self) -> Optional[ops.Relation]:
         """Fetch the peer relation."""
         return self.model.get_relation(PEER_NAME)
 
-    def set_peer_data(self, key: str, data: Any) -> None:
+    def set_peer_data(self, key: str, data: JSONData) -> None:
         """Put information into the peer data bucket instead of `StoredState`."""
-        self.peers.data[self.app][key] = json.dumps(data)
+        peers = cast(ops.Relation, self.peers)
+        peers.data[self.app][key] = json.dumps(data)
 
-    def get_peer_data(self, key: str) -> Dict[Any, Any]:
+    def get_peer_data(self, key: str) -> Dict[str, JSONData]:
         """Retrieve information from the peer data bucket instead of `StoredState`."""
         if not self.peers:
             return {}
         data = self.peers.data[self.app].get(key, "")
-        return json.loads(data) if data else {}
+        if not data:
+            return {}
+        return json.loads(data)
 
 
 if __name__ == "__main__":  # pragma: nocover

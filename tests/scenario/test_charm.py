@@ -6,11 +6,12 @@
 from unittest.mock import Mock
 
 import scenario
+from pytest import MonkeyPatch
 
 from charm import FastAPIDemoCharm
 
 
-def test_get_db_info_action(monkeypatch):
+def test_get_db_info_action(monkeypatch: MonkeyPatch):
 
     monkeypatch.setattr("charm.LogProxyConsumer", Mock())
     monkeypatch.setattr("charm.MetricsEndpointProvider", Mock())

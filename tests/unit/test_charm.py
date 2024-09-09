@@ -18,7 +18,9 @@ def harness():
     harness.cleanup()
 
 
-def test_pebble_layer(monkeypatch, harness: ops.testing.Harness[FastAPIDemoCharm]):
+def test_pebble_layer(
+    monkeypatch: pytest.MonkeyPatch, harness: ops.testing.Harness[FastAPIDemoCharm]
+):
     monkeypatch.setattr(FastAPIDemoCharm, "version", "1.0.0")
     # Expected plan after Pebble ready with default config
     expected_plan = {

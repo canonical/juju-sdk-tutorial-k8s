@@ -44,7 +44,7 @@ def test_get_db_info_action(monkeypatch: MonkeyPatch):
     # Declare the input state.
     state_in = scenario.State(
         leader=True,
-        relations=[
+        relations={
             scenario.Relation(
                 endpoint='database',
                 interface='postgresql_client',
@@ -56,17 +56,16 @@ def test_get_db_info_action(monkeypatch: MonkeyPatch):
                     'password': 'bar',
                 },
             ),
-        ],
-        containers=[
-            scenario.Container(name='demo-server', can_connect=True),
-        ],
+        },
+        containers={
+            scenario.Container('demo-server', can_connect=True),
+        },
     )
 
-    # run the action with the defined state and collect the output.
-    action = scenario.Action('get-db-info', {'show-password': True})
-    action_out = ctx.run_action(action, state_in)
+    # Run the action with the defined state and collect the output.
+    ctx.run(ctx.on.action('get-db-info', params={'show-password': True}), state_in)
 
-    assert action_out.results == {
+    assert ctx.action_results == {
         'db-host': '127.0.0.1',
         'db-port': '5432',
         'db-username': 'foo',

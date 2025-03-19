@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-# Copyright 2023 Canonical Ltd.
+# Copyright 2025 Ubuntu
 # See LICENSE file for licensing details.
 #
 # Learn more at: https://juju.is/docs/sdk
+
+"""Charm the application."""
+
 import logging
 
 import ops
@@ -17,9 +20,7 @@ class FastAPIDemoCharm(ops.CharmBase):
     def __init__(self, framework: ops.Framework) -> None:
         super().__init__(framework)
         self.pebble_service_name = "fastapi-service"
-        framework.observe(
-            self.on.demo_server_pebble_ready, self._on_demo_server_pebble_ready
-        )
+        framework.observe(self.on.demo_server_pebble_ready, self._on_demo_server_pebble_ready)
 
     def _on_demo_server_pebble_ready(self, event: ops.PebbleReadyEvent) -> None:
         """Define and start a workload using the Pebble API.
@@ -44,12 +45,14 @@ class FastAPIDemoCharm(ops.CharmBase):
     @property
     def _pebble_layer(self) -> ops.pebble.Layer:
         """A Pebble layer for the FastAPI demo services."""
-        command = " ".join([
-            "uvicorn",
-            "api_demo_server.app:app",
-            "--host=0.0.0.0",
-            "--port=8000",
-        ])
+        command = " ".join(
+            [
+                "uvicorn",
+                "api_demo_server.app:app",
+                "--host=0.0.0.0",
+                "--port=8000",
+            ]
+        )
         pebble_layer: ops.pebble.LayerDict = {
             "summary": "FastAPI demo service",
             "description": "pebble config layer for FastAPI demo server",

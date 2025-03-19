@@ -34,6 +34,4 @@ def test_pebble_layer():
     # Check that we have the plan we expected:
     assert state_out.get_container(container.name).plan == expected_plan
     # Check the service was started:
-    assert (
-        container.service_statuses["fastapi-service"] == ops.pebble.ServiceStatus.ACTIVE
-    )
+    assert container.service_statuses["fastapi-service"] == ops.pebble.ServiceStatus.ACTIVE

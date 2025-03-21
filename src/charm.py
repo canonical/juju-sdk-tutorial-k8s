@@ -104,7 +104,7 @@ class FastAPIDemoCharm(ops.CharmBase):
 
     @property
     def app_environment(self) -> Dict[str, Optional[str]]:
-        """Creates a dictionary containing environment variables for the application.
+        """Create a dictionary containing environment variables for the application.
 
         It retrieves the database authentication data by calling
         the `fetch_postgres_relation_data` method and uses it to populate the dictionary.

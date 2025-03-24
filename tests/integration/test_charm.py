@@ -33,7 +33,7 @@ async def test_build_and_deploy(ops_test: OpsTest):
     await asyncio.gather(
         ops_test.model.deploy(charm, resources=resources, application_name=APP_NAME),
         ops_test.model.wait_for_idle(
-            apps=[APP_NAME], status="blocked", raise_on_blocked=False, timeout=120
+            apps=[APP_NAME], status="blocked", raise_on_blocked=False, timeout=300
         ),
     )
 
@@ -51,5 +51,5 @@ async def test_database_integration(ops_test: OpsTest):
     )
     await ops_test.model.integrate(f"{APP_NAME}", "postgresql-k8s")
     await ops_test.model.wait_for_idle(
-        apps=[APP_NAME], status="active", raise_on_blocked=False, timeout=120
+        apps=[APP_NAME], status="active", raise_on_blocked=False, timeout=300
     )

@@ -28,8 +28,6 @@ async def test_build_and_deploy(ops_test: OpsTest):
         "demo-server-image": METADATA["resources"]["demo-server-image"]["upstream-source"]
     }
 
-    # Deploy the charm and wait for blocked/idle status
-    # The app will not be in active status as this requires a database relation
     await asyncio.gather(
         ops_test.model.deploy(charm, resources=resources, application_name=APP_NAME),
         ops_test.model.wait_for_idle(

@@ -49,6 +49,7 @@ jobs:
         uses: charmed-kubernetes/actions-operator@main
         with:
           provider: microk8s
+          channel: 1.32-strict/stable
       - name: Set up Python 3
         uses: actions/setup-python@v5
         with:

@@ -46,7 +46,7 @@ class FastAPIDemoCharm(ops.CharmBase):
             event.add_status(ops.WaitingStatus("Waiting for database relation"))
         try:
             status = self.container.get_service(self.pebble_service_name)
-        except (ops.pebble.APIError, ops.ModelError):
+        except (ops.pebble.APIError, ops.pebble.ConnectionError, ops.ModelError):
             event.add_status(ops.MaintenanceStatus("Waiting for Pebble in workload container"))
         else:
             if not status.is_running():

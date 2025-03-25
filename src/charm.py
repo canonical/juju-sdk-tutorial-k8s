@@ -169,7 +169,7 @@ class FastAPIDemoCharm(ops.CharmBase):
 
                 self.container.restart(self.pebble_service_name)
                 logger.info(f"Restarted '{self.pebble_service_name}' service")
-        except ops.pebble.APIError as e:
+        except (ops.pebble.APIError, ops.pebble.ConnectionError) as e:
             logger.info("Unable to connect to Pebble: %s", e)
             return
         # Add workload version in Juju status.

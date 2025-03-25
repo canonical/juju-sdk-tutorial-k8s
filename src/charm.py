@@ -62,7 +62,7 @@ class FastAPIDemoCharm(ops.CharmBase):
             event.add_status(ops.WaitingStatus("Waiting for database relation"))
         try:
             status = self.container.get_service(self.pebble_service_name)
-        except (ops.pebble.APIError, ops.ModelError):
+        except (ops.pebble.APIError, ops.pebble.ConnectionError, ops.ModelError):
             event.add_status(ops.MaintenanceStatus("Waiting for Pebble in workload container"))
         else:
             if not status.is_running():
@@ -151,7 +151,7 @@ class FastAPIDemoCharm(ops.CharmBase):
 
                 self.container.restart(self.pebble_service_name)
                 logger.info(f"Restarted '{self.pebble_service_name}' service")
-        except ops.pebble.APIError as e:
+        except (ops.pebble.APIError, ops.pebble.ConnectionError) as e:
             logger.info("Unable to connect to Pebble: %s", e)
             return
         # Add workload version in Juju status.

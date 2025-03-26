@@ -260,7 +260,7 @@ class FastAPIDemoCharm(ops.CharmBase):
         return ""
 
     def _request_version(self) -> str:
-        """Fetchi the version from the running workload using the API."""
+        """Fetch the version from the running workload using the API."""
         resp = requests.get(f"http://localhost:{self.config['server-port']}/version", timeout=10)
         return resp.json()["version"]
 

@@ -33,6 +33,8 @@ def test_pebble_layer():
 
     # Check that we have the plan we expected:
     assert state_out.get_container(container.name).plan == expected_plan
+    # Check the unit status is active
+    assert state_out.unit_status == testing.ActiveStatus()
     # Check the service was started:
     assert container.service_statuses["fastapi-service"] == ops.pebble.ServiceStatus.ACTIVE
 
@@ -58,6 +60,6 @@ def test_config_changed_invalid_port():
         leader=True,
     )
     state_out = ctx.run(ctx.on.config_changed(), state_in)
-    assert state_out.unit_status == ops.BlockedStatus(
+    assert state_out.unit_status == testing.BlockedStatus(
         "Invalid port number, 22 is reserved for SSH"
     )

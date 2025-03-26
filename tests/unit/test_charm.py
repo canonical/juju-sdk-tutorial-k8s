@@ -58,7 +58,7 @@ def test_config_changed_invalid_port():
         leader=True,
     )
     state_out = ctx.run(ctx.on.config_changed(), state_in)
-    assert state_out.unit_status == ops.BlockedStatus(
+    assert state_out.unit_status == testing.BlockedStatus(
         "Invalid port number, 22 is reserved for SSH"
     )
 
@@ -102,7 +102,7 @@ def test_no_database_blocked():
 
     state_out = ctx.run(ctx.on.collect_unit_status(), state_in)
 
-    assert state_out.unit_status == ops.BlockedStatus("Waiting for database relation")
+    assert state_out.unit_status == testing.BlockedStatus("Waiting for database relation")
 
 
 def test_get_db_info_action():

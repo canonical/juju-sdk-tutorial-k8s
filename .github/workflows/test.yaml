@@ -1,0 +1,66 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - 01_create_minimal_charm
+      - 02_make_your_charm_configurable
+      - 04_integrate_with_psql
+      - 06_create_actions
+      - 07_cos_integration
+  pull_request:
+    branches:
+      - 01_create_minimal_charm
+      - 02_make_your_charm_configurable
+      - 04_integrate_with_psql
+      - 06_create_actions
+      - 07_cos_integration
+  workflow_call:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install tox
+        run: pip install tox~=4.24
+      - name: Run linting
+        run: tox -e lint
+
+  unit-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install tox
+        run: pip install tox~=4.24
+      - name: Run tests
+        run: tox -e unit
+
+  integration-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup operator environment
+        uses: charmed-kubernetes/actions-operator@main
+        with:
+          provider: microk8s
+          channel: 1.32-strict/stable
+      - name: Set up Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install tox
+        run: pip install tox~=4.24
+      - name: Run tests
+        run: tox -e integration

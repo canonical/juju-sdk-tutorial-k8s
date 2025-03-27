@@ -3,6 +3,9 @@
 # See LICENSE file for licensing details.
 #
 # Learn more at: https://juju.is/docs/sdk
+
+"""Charm the application."""
+
 import logging
 
 import ops
@@ -16,7 +19,7 @@ class FastAPIDemoCharm(ops.CharmBase):
 
     def __init__(self, framework: ops.Framework) -> None:
         super().__init__(framework)
-        self.pebble_service_name = 'fastapi-service'
+        self.pebble_service_name = "fastapi-service"
         framework.observe(self.on.demo_server_pebble_ready, self._on_demo_server_pebble_ready)
 
     def _on_demo_server_pebble_ready(self, event: ops.PebbleReadyEvent) -> None:
@@ -32,7 +35,7 @@ class FastAPIDemoCharm(ops.CharmBase):
         # Get a reference the container attribute on the PebbleReadyEvent
         container = event.workload
         # Add initial Pebble config layer using the Pebble API
-        container.add_layer('fastapi_demo', self._pebble_layer, combine=True)
+        container.add_layer("fastapi_demo", self._pebble_layer, combine=True)
         # Make Pebble reevaluate its plan, ensuring any services are started if enabled.
         container.replan()
         # Learn more about statuses in the SDK docs:
@@ -42,28 +45,28 @@ class FastAPIDemoCharm(ops.CharmBase):
     @property
     def _pebble_layer(self) -> ops.pebble.Layer:
         """A Pebble layer for the FastAPI demo services."""
-        command = ' '.join(
+        command = " ".join(
             [
-                'uvicorn',
-                'api_demo_server.app:app',
-                '--host=0.0.0.0',
-                '--port=8000',
+                "uvicorn",
+                "api_demo_server.app:app",
+                "--host=0.0.0.0",
+                "--port=8000",
             ]
         )
         pebble_layer: ops.pebble.LayerDict = {
-            'summary': 'FastAPI demo service',
-            'description': 'pebble config layer for FastAPI demo server',
-            'services': {
+            "summary": "FastAPI demo service",
+            "description": "pebble config layer for FastAPI demo server",
+            "services": {
                 self.pebble_service_name: {
-                    'override': 'replace',
-                    'summary': 'fastapi demo',
-                    'command': command,
-                    'startup': 'enabled',
+                    "override": "replace",
+                    "summary": "fastapi demo",
+                    "command": command,
+                    "startup": "enabled",
                 }
             },
         }
         return ops.pebble.Layer(pebble_layer)
 
 
-if __name__ == '__main__':  # pragma: nocover
+if __name__ == "__main__":  # pragma: nocover
     ops.main(FastAPIDemoCharm)

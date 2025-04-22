@@ -36,7 +36,10 @@ def test_pebble_layer():
     # Check the unit status is active
     assert state_out.unit_status == testing.ActiveStatus()
     # Check the service was started:
-    assert container.service_statuses["fastapi-service"] == ops.pebble.ServiceStatus.ACTIVE
+    assert (
+        state_out.get_container(container.name).service_statuses["fastapi-service"]
+        == ops.pebble.ServiceStatus.ACTIVE
+    )
 
 
 def test_config_changed():
@@ -47,8 +50,14 @@ def test_config_changed():
         config={"server-port": 8080},
         leader=True,
     )
-    ctx.run(ctx.on.config_changed(), state_in)
-    assert "--port=8080" in container.layers["fastapi_demo"].services["fastapi-service"].command
+    state_out = ctx.run(ctx.on.config_changed(), state_in)
+    assert (
+        "--port=8080"
+        in state_out.get_container(container.name)
+        .layers["fastapi_demo"]
+        .services["fastapi-service"]
+        .command
+    )
 
 
 def test_config_changed_invalid_port():

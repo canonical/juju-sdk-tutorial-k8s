@@ -7,6 +7,7 @@
 """Charm the application."""
 
 import logging
+from typing import Dict
 
 import ops
 import requests
@@ -125,7 +126,7 @@ class FastAPIDemoCharm(ops.CharmBase):
         }
         return env
 
-    def fetch_postgres_relation_data(self) -> dict[str, str]:
+    def fetch_postgres_relation_data(self) -> Dict[str, str]:
         """Fetch postgres relation data.
 
         This function retrieves relation data from a postgres database using

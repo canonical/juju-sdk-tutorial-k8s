@@ -34,7 +34,10 @@ def test_pebble_layer():
     # Check that we have the plan we expected:
     assert state_out.get_container(container.name).plan == expected_plan
     # Check the service was started:
-    assert container.service_statuses["fastapi-service"] == ops.pebble.ServiceStatus.ACTIVE
+    assert (
+        state_out.get_container(container.name).service_statuses["fastapi-service"]
+        == ops.pebble.ServiceStatus.ACTIVE
+    )
 
 
 def test_config_changed():
@@ -45,8 +48,14 @@ def test_config_changed():
         config={"server-port": 8080},
         leader=True,
     )
-    ctx.run(ctx.on.config_changed(), state_in)
-    assert "--port=8080" in container.layers["fastapi_demo"].services["fastapi-service"].command
+    state_out = ctx.run(ctx.on.config_changed(), state_in)
+    assert (
+        "--port=8080"
+        in state_out.get_container(container.name)
+        .layers["fastapi_demo"]
+        .services["fastapi-service"]
+        .command
+    )
 
 
 def test_config_changed_invalid_port():
@@ -82,9 +91,11 @@ def test_relation_data():
         leader=True,
     )
 
-    ctx.run(ctx.on.relation_changed(relation), state_in)
+    state_out = ctx.run(ctx.on.relation_changed(relation), state_in)
 
-    assert container.layers["fastapi_demo"].services["fastapi-service"].environment == {
+    assert state_out.get_container(container.name).layers["fastapi_demo"].services[
+        "fastapi-service"
+    ].environment == {
         "DEMO_SERVER_DB_HOST": "example.com",
         "DEMO_SERVER_DB_PORT": "5432",
         "DEMO_SERVER_DB_USER": "foo",

@@ -5,16 +5,16 @@ on:
     branches:
       - 01_create_minimal_charm
       - 02_make_your_charm_configurable
-      - 04_integrate_with_psql
-      - 06_create_actions
-      - 07_cos_integration
+      - 03_integrate_with_psql
+      - 04_create_actions
+      - 05_cos_integration
   pull_request:
     branches:
       - 01_create_minimal_charm
       - 02_make_your_charm_configurable
-      - 04_integrate_with_psql
-      - 06_create_actions
-      - 07_cos_integration
+      - 03_integrate_with_psql
+      - 04_create_actions
+      - 05_cos_integration
   workflow_call:
 
 jobs:

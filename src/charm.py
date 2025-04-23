@@ -7,7 +7,7 @@
 """Charm the application."""
 
 import logging
-from typing import Dict, Optional
+from typing import Dict
 
 import ops
 import requests
@@ -103,7 +103,7 @@ class FastAPIDemoCharm(ops.CharmBase):
         self.unit.set_workload_version(self.version)
 
     @property
-    def app_environment(self) -> Dict[str, Optional[str]]:
+    def app_environment(self) -> Dict[str, str]:
         """Create a dictionary containing environment variables for the application.
 
         It retrieves the database authentication data by calling
@@ -115,10 +115,14 @@ class FastAPIDemoCharm(ops.CharmBase):
         if not db_data:
             return {}
         env = {
-            "DEMO_SERVER_DB_HOST": db_data.get("db_host", None),
-            "DEMO_SERVER_DB_PORT": db_data.get("db_port", None),
-            "DEMO_SERVER_DB_USER": db_data.get("db_username", None),
-            "DEMO_SERVER_DB_PASSWORD": db_data.get("db_password", None),
+            key: value
+            for key, value in {
+                "DEMO_SERVER_DB_HOST": db_data.get("db_host", None),
+                "DEMO_SERVER_DB_PORT": db_data.get("db_port", None),
+                "DEMO_SERVER_DB_USER": db_data.get("db_username", None),
+                "DEMO_SERVER_DB_PASSWORD": db_data.get("db_password", None),
+            }.items()
+            if value is not None
         }
         return env
 

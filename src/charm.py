@@ -7,7 +7,6 @@
 """Charm the application."""
 
 import logging
-from typing import Dict
 
 import ops
 import requests
@@ -103,7 +102,7 @@ class FastAPIDemoCharm(ops.CharmBase):
         self.unit.set_workload_version(self.version)
 
     @property
-    def app_environment(self) -> Dict[str, str]:
+    def app_environment(self) -> dict[str, str]:
         """Create a dictionary containing environment variables for the application.
 
         It retrieves the database authentication data by calling
@@ -126,7 +125,7 @@ class FastAPIDemoCharm(ops.CharmBase):
         }
         return env
 
-    def fetch_postgres_relation_data(self) -> Dict[str, str]:
+    def fetch_postgres_relation_data(self) -> dict[str, str]:
         """Fetch postgres relation data.
 
         This function retrieves relation data from a postgres database using

@@ -176,7 +176,7 @@ class FastAPIDemoCharm(ops.CharmBase):
         self.unit.set_workload_version(self.version)
 
     @property
-    def app_environment(self) -> Dict[str, str]:
+    def app_environment(self) -> dict[str, str]:
         """Create a dictionary containing environment variables for the application.
 
         It retrieves the database authentication data by calling

@@ -8,7 +8,7 @@
 
 import json
 import logging
-from typing import List, Optional, Union, cast
+from typing import Optional, Union, cast
 
 import ops
 import requests
@@ -21,7 +21,7 @@ PEER_NAME = "fastapi-peer"
 
 JSONData = Union[
     dict[str, "JSONData"],
-    List["JSONData"],
+    list["JSONData"],
     str,
     int,
     float,

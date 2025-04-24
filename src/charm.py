@@ -8,7 +8,7 @@
 
 import json
 import logging
-from typing import Dict, List, Optional, Union, cast
+from typing import Optional, Union, cast
 
 import ops
 import requests
@@ -20,8 +20,8 @@ logger = logging.getLogger(__name__)
 PEER_NAME = "fastapi-peer"
 
 JSONData = Union[
-    Dict[str, "JSONData"],
-    List["JSONData"],
+    dict[str, "JSONData"],
+    list["JSONData"],
     str,
     int,
     float,
@@ -158,7 +158,7 @@ class FastAPIDemoCharm(ops.CharmBase):
         self.unit.set_workload_version(self.version)
 
     @property
-    def app_environment(self) -> Dict[str, str]:
+    def app_environment(self) -> dict[str, str]:
         """Create a dictionary containing environment variables for the application.
 
         It retrieves the database authentication data by calling
@@ -181,7 +181,7 @@ class FastAPIDemoCharm(ops.CharmBase):
         }
         return env
 
-    def fetch_postgres_relation_data(self) -> Dict[str, str]:
+    def fetch_postgres_relation_data(self) -> dict[str, str]:
         """Fetch postgres relation data.
 
         This function retrieves relation data from a postgres database using
@@ -260,7 +260,7 @@ class FastAPIDemoCharm(ops.CharmBase):
         peers = cast(ops.Relation, self.peers)
         peers.data[self.app][key] = json.dumps(data)
 
-    def get_peer_data(self, key: str) -> Dict[str, JSONData]:
+    def get_peer_data(self, key: str) -> dict[str, JSONData]:
         """Retrieve information from the peer data bucket instead of `StoredState`."""
         if not self.peers:
             return {}
